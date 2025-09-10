@@ -1,0 +1,3533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Order Management System - ULTRA Working</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind production warning
+        if (typeof console !== 'undefined' && console.warn) {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                const message = args.join(' ');
+                if (message.includes('tailwindcss.com') && message.includes('production')) {
+                    return; // Suppress Tailwind production warning
+                }
+                originalWarn.apply(console, args);
+            };
+        }
+    </script>
+    
+    <!-- Enhanced Font Awesome with proper fallbacks -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css';">
+    
+    <!-- Complete fallback CSS for Font Awesome if all CDNs fail -->
+    <style>
+        /* Remove problematic font-face declarations that cause decode errors */
+        
+        /* Enhanced fallback icons using Unicode and emojis */
+        .fas, .fab, .far, .fa {
+            font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome', sans-serif;
+            font-weight: 900;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+        
+        /* Comprehensive icon fallbacks */
+        .fa-plus::before { content: '➕'; }
+        .fa-times::before { content: '❌'; }
+        .fa-check::before { content: '✅'; }
+        .fa-check-circle::before { content: '✅'; }
+        .fa-cog::before { content: '⚙️'; }
+        .fa-truck::before { content: '🚚'; }
+        .fa-qrcode::before { content: '📱'; }
+        .fa-tachometer-alt::before { content: '📊'; }
+        .fa-list-alt::before { content: '📋'; }
+        .fa-shopping-cart::before { content: '🛒'; }
+        .fa-rupee-sign::before { content: '₹'; }
+        .fa-bolt::before { content: '⚡'; }
+        .fa-history::before { content: '🕒'; }
+        .fa-arrow-right::before { content: '→'; }
+        .fa-filter::before { content: '🔍'; }
+        .fa-search::before { content: '🔍'; }
+        .fa-user::before { content: '👤'; }
+        .fa-box::before { content: '📦'; }
+        .fa-info-circle::before { content: 'ℹ️'; }
+        .fa-database::before { content: '💾'; }
+        .fa-building::before { content: '🏢'; }
+        .fa-receipt::before { content: '🧾'; }
+        .fa-save::before { content: '💾'; }
+        .fa-download::before { content: '⬇️'; }
+        .fa-upload::before { content: '⬆️'; }
+        .fa-trash::before { content: '🗑️'; }
+        .fa-exclamation-triangle::before { content: '⚠️'; }
+        .fa-link::before { content: '🔗'; }
+        .fa-sync::before { content: '🔄'; }
+        .fa-code::before { content: '💻'; }
+        .fa-bug::before { content: '🐛'; }
+        .fa-shield-alt::before { content: '🛡️'; }
+        .fa-camera::before { content: '📷'; }
+        .fa-play::before { content: '▶️'; }
+        .fa-stop::before { content: '⏹️'; }
+        .fa-flask::before { content: '🧪'; }
+        
+        /* Ensure icons display properly even without Font Awesome */
+        .fas, .fab, .far, .fa {
+            display: inline-block;
+            font-size: inherit;
+            text-decoration: none;
+        }
+        
+        /* Prevent CDN-related errors from showing */
+        link[href*="cdn-cgi"] {
+            display: none !important;
+        }
+        
+        /* Block problematic CDN requests */
+        *[src*="cdn-cgi"],
+        *[href*="cdn-cgi"] {
+            display: none !important;
+        }
+    </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * { 
+            font-family: 'Poppins', sans-serif; 
+            box-sizing: border-box;
+        }
+        
+        .gradient-bg { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-shadow { 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .card-shadow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-ready { background: #d1fae5; color: #065f46; }
+        .status-dispatched { background: #e0e7ff; color: #3730a3; }
+        .status-delivered { background: #dcfce7; color: #166534; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success { background: linear-gradient(135deg, #10b981, #059669); }
+        .notification.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .notification.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        
+        .advanced-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 24px;
+        }
+        
+        .advanced-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .advanced-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .search-advanced {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .search-advanced:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+        
+        .modal-advanced {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content-advanced {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .nav-tab {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.2) !important;
+            font-weight: 600 !important;
+        }
+        
+        .page-content {
+            display: none;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+
+        .status-filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-filter-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .status-filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-tab span {
+                display: none;
+            }
+            
+            .nav-tab i {
+                font-size: 16px;
+            }
+            
+            .notification {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            
+            .stats-card {
+                padding: 16px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Top Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-30">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-xl font-bold">📦 Complete Order Management - ULTRA Working</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- System Status -->
+                    <div class="flex items-center space-x-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <div class="w-2 h-2 rounded-full bg-green-600 animate-pulse"></div>
+                        <span>System Online</span>
+                    </div>
+                    
+                    <button onclick="showCreateOrderModal()" class="advanced-button">
+                        <i class="fas fa-plus mr-2"></i><span class="hidden sm:inline">New Order</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="border-t border-white border-opacity-20">
+                <div class="flex space-x-1 px-4 py-2 overflow-x-auto">
+                    <button onclick="showPage('dashboard')" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="showPage('all-orders')" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-list-alt"></i>
+                        <span>All Orders</span>
+                    </button>
+                    <button onclick="showPage('processing')" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-cog"></i>
+                        <span>Processing</span>
+                    </button>
+                    <button onclick="showPage('ready')" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Ready</span>
+                    </button>
+                    <button onclick="showPage('dispatch')" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-truck"></i>
+                        <span>Dispatch</span>
+                    </button>
+                    <button onclick="showPage('settings')" class="nav-tab flex items-center space-x-2 px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page-content active p-6">
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-2 floating-animation">Welcome! 👋</h2>
+                    <p class="text-gray-600 text-lg">Complete Order Management Dashboard</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stats-card floating-animation">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+                        <i class="fas fa-shopping-cart text-2xl"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white text-opacity-75 text-sm">Total Orders</p>
+                        <p class="text-3xl font-bold" id="total-orders">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card floating-animation" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+                        <i class="fas fa-cog text-2xl"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white text-opacity-75 text-sm">Processing</p>
+                        <p class="text-3xl font-bold" id="processing-orders">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card floating-animation" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+                        <i class="fas fa-check-circle text-2xl"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white text-opacity-75 text-sm">Ready</p>
+                        <p class="text-3xl font-bold" id="ready-orders">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card floating-animation" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+                        <i class="fas fa-rupee-sign text-2xl"></i>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white text-opacity-75 text-sm">Revenue</p>
+                        <p class="text-2xl font-bold" id="total-revenue">₹0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="advanced-card p-6 mb-8">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-bolt mr-2 text-yellow-600"></i>Quick Actions
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onclick="showCreateOrderModal()" class="w-full advanced-button">
+                    <i class="fas fa-plus mr-2"></i>Create New Order
+                </button>
+                <button onclick="showPage('processing')" class="w-full advanced-button" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    <i class="fas fa-cog mr-2"></i>Processing Orders
+                </button>
+                <button onclick="showPage('ready')" class="w-full advanced-button" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                    <i class="fas fa-check mr-2"></i>Ready Orders
+                </button>
+                <button onclick="showPage('settings')" class="w-full advanced-button" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="advanced-card p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-history mr-2 text-green-600"></i>Recent Orders
+                </h3>
+                <button onclick="showPage('all-orders')" class="text-blue-600 hover:text-blue-800 font-medium">
+                    View All <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+            <div id="recent-orders" class="space-y-4">
+                <!-- Recent orders will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- All Orders Page -->
+    <div id="all-orders-page" class="page-content p-6">
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">All Orders</h2>
+                    <p class="text-gray-600">Manage and track all your orders</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="showCreateOrderModal()" class="advanced-button">
+                        <i class="fas fa-plus mr-2"></i><span class="hidden sm:inline">Create Order</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search and Filter -->
+            <div class="advanced-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-filter mr-2 text-blue-600"></i>Search & Filter
+                    </h3>
+                    <span class="text-sm text-gray-600" id="orders-count">Total: 0 orders</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="relative">
+                        <input type="text" id="search-orders" placeholder="Search by Order ID, Name, Mobile..." class="search-advanced" oninput="filterOrders()">
+                        <i class="fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <select id="filter-status" class="search-advanced" onchange="filterOrders()">
+                        <option value="">All Status</option>
+                        <option value="processing">⚙️ Processing</option>
+                        <option value="ready">✅ Ready</option>
+                        <option value="dispatched">🚚 Dispatched</option>
+                        <option value="delivered">🎉 Delivered</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                    </select>
+                    <button onclick="clearFilters()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-times mr-2"></i>Clear Filters
+                    </button>
+                </div>
+
+                <!-- Status Filter Buttons -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterByStatus('')" class="status-filter-btn bg-gray-100 text-gray-700 active">
+                        All Orders
+                    </button>
+                    <button onclick="filterByStatus('processing')" class="status-filter-btn bg-blue-100 text-blue-800">
+                        ⚙️ Processing
+                    </button>
+                    <button onclick="filterByStatus('ready')" class="status-filter-btn bg-green-100 text-green-800">
+                        ✅ Ready
+                    </button>
+                    <button onclick="filterByStatus('dispatched')" class="status-filter-btn bg-purple-100 text-purple-800">
+                        🚚 Dispatched
+                    </button>
+                    <button onclick="filterByStatus('delivered')" class="status-filter-btn bg-emerald-100 text-emerald-800">
+                        🎉 Delivered
+                    </button>
+                    <button onclick="filterByStatus('cancelled')" class="status-filter-btn bg-red-100 text-red-800">
+                        ❌ Cancelled
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Grid -->
+        <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Orders will be populated here -->
+        </div>
+    </div>
+
+    <!-- Processing Orders Page -->
+    <div id="processing-page" class="page-content p-6">
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">⚙️ Processing Orders</h2>
+                    <p class="text-gray-600">Orders currently being processed</p>
+                </div>
+                <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
+                    <span id="processing-count">0</span> Processing
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Orders Grid -->
+        <div id="processing-orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Processing orders will be populated here -->
+        </div>
+    </div>
+
+    <!-- Ready Orders Page -->
+    <div id="ready-page" class="page-content p-6">
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">✅ Ready Orders</h2>
+                    <p class="text-gray-600">Orders ready for dispatch</p>
+                </div>
+                <div class="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
+                    <span id="ready-count">0</span> Ready
+                </div>
+            </div>
+        </div>
+
+        <!-- Ready Orders Grid -->
+        <div id="ready-orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Ready orders will be populated here -->
+        </div>
+    </div>
+
+    <!-- Dispatch Orders Page -->
+    <div id="dispatch-page" class="page-content p-6">
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">🚚 Dispatch Orders</h2>
+                    <p class="text-gray-600">Orders ready for dispatch and delivered</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleQRScanner()" id="scanner-toggle-btn" class="advanced-button bg-green-600 hover:bg-green-700">
+                        <i class="fas fa-qrcode mr-2"></i>📱 Start QR Scanner
+                    </button>
+                    <div class="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg font-semibold">
+                        <span id="dispatch-count">0</span> Dispatched
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Scanner Section -->
+        <div id="qr-scanner-section" class="advanced-card p-6 mb-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-camera mr-2 text-green-600"></i>📱 QR Code Scanner - Delivery Confirmation
+                </h3>
+                <button onclick="toggleQRScanner()" class="text-red-600 hover:text-red-800 font-medium">
+                    <i class="fas fa-times mr-1"></i>Close Scanner
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Camera Preview -->
+                <div class="bg-gray-100 rounded-lg p-4">
+                    <div class="text-center mb-4">
+                        <h4 class="font-semibold text-gray-900 mb-2">📷 Camera Preview</h4>
+                        <p class="text-sm text-gray-600">Position the QR code within the camera view</p>
+                    </div>
+                    
+                    <div class="relative bg-black rounded-lg overflow-hidden" style="aspect-ratio: 4/3;">
+                        <video id="qr-video" class="w-full h-full object-cover" autoplay muted playsinline></video>
+                        <div class="absolute inset-0 border-4 border-green-500 border-dashed opacity-50 m-8 rounded-lg"></div>
+                        <div class="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg text-sm">
+                            <span id="scanner-status">📡 Initializing camera...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="startScanning()" id="start-scan-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-play mr-2"></i>▶️ Start Scanning
+                            </button>
+                            <button onclick="stopScanning()" id="stop-scan-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-stop mr-2"></i>⏹️ Stop Scanning
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scan Results -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-900 mb-4">📋 Scan Results & Instructions</h4>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                            <h5 class="font-medium text-blue-900 mb-2">📖 How to Use:</h5>
+                            <ol class="text-sm text-blue-800 space-y-1">
+                                <li>1️⃣ Click "Start Scanning" to activate camera</li>
+                                <li>2️⃣ Point camera at gate pass QR code</li>
+                                <li>3️⃣ Wait for automatic detection</li>
+                                <li>4️⃣ Order will be marked as delivered automatically</li>
+                            </ol>
+                        </div>
+                        
+                        <div id="scan-result" class="bg-white border border-gray-200 p-3 rounded-lg min-h-[100px]">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-qrcode text-3xl mb-2"></i>
+                                <p>🔍 Scan results will appear here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
+                            <h5 class="font-medium text-green-900 mb-2">✅ Recent Deliveries:</h5>
+                            <div id="recent-deliveries" class="text-sm text-green-800">
+                                <p class="text-gray-600">No recent deliveries via QR scan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dispatch Orders Grid -->
+        <div id="dispatch-orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dispatch orders will be populated here -->
+        </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="settings-page" class="page-content p-6">
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-2 floating-animation">
+                        <i class="fas fa-cog mr-3 text-purple-600"></i>Settings
+                    </h2>
+                    <p class="text-gray-600 text-lg">Configure your order management system</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- System Information -->
+            <div class="advanced-card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>System Information
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                            <span class="font-medium text-green-800">System Status: Online & Working</span>
+                        </div>
+                        <div class="text-sm text-green-700">Universal Google Sheets database with real-time sync</div>
+                        <div class="mt-2 p-2 bg-white rounded border">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-600">Database Status:</span>
+                                <span id="sync-status" class="text-xs font-medium text-blue-600">🔄 Ready to Connect</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-1">
+                                <span class="text-xs text-gray-600">Last Sync:</span>
+                                <span id="last-sync-time" class="text-xs text-gray-500">Never</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="text-sm text-gray-600">Total Orders</div>
+                            <div class="font-semibold text-lg" id="system-total-orders">0</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="text-sm text-gray-600">Total Customers</div>
+                            <div class="font-semibold text-lg" id="system-total-customers">0</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="text-sm text-gray-600">Data Storage</div>
+                            <div class="font-semibold text-lg">Local Browser</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="text-sm text-gray-600">Last Updated</div>
+                            <div class="font-semibold text-lg" id="system-last-updated">Just now</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="advanced-card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-database mr-2 text-purple-600"></i>Data Management
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Google Apps Script Web App Integration -->
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                        <h4 class="font-semibold text-green-900 mb-3">
+                            <i class="fab fa-google mr-2"></i>📊 Google Apps Script Database
+                        </h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-green-800 mb-1">Google Apps Script Web App URL:</label>
+                                <input type="url" id="google-webapp-url" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" class="w-full px-3 py-2 border border-green-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-green-800 mb-1">Access Password (Optional):</label>
+                                <input type="password" id="webapp-password" placeholder="Enter password if required" class="w-full px-3 py-2 border border-green-300 rounded-lg text-sm">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                                <button onclick="connectGoogleWebApp()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                    <i class="fas fa-link mr-2"></i>🔗 Connect
+                                </button>
+                                <button onclick="syncWithGoogleWebApp()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                    <i class="fas fa-sync mr-2"></i>🔄 Sync Now
+                                </button>
+                                <button onclick="showGoogleScriptCode()" class="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                    <i class="fas fa-code mr-2"></i>📝 Get Script
+                                </button>
+                                <button onclick="testWebAppURL()" class="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                    <i class="fas fa-bug mr-2"></i>🔧 Test URL
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="auto-sync-enabled" checked class="rounded border-green-300 text-green-600 focus:ring-green-500">
+                                <label class="text-sm text-green-800">Enable Auto-Sync (every 5 seconds)</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="realtime-sync-enabled" checked class="rounded border-green-300 text-green-600 focus:ring-green-500">
+                                <label class="text-sm text-green-800">⚡ ULTRA-FAST Real-time Sync (3 seconds + instant on changes)</label>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 p-2 rounded text-xs text-blue-800">
+                                <strong>⚡ ULTRA-FAST SYNC:</strong> Changes sync instantly (500ms) + background sync every 3 seconds for maximum speed!
+                            </div>
+                        </div>
+                        <div class="text-xs text-green-700 mt-2">
+                            ⚡ Ultra-fast sync with Google Apps Script - No API keys needed!
+                        </div>
+                    </div>
+
+                    <!-- Backup & Restore -->
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                        <h4 class="font-semibold text-blue-900 mb-3">
+                            <i class="fas fa-shield-alt mr-2"></i>Backup & Restore
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button onclick="createFullBackup()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                <i class="fas fa-download mr-2"></i>📥 Full Backup
+                            </button>
+                            <button onclick="restoreFromBackup()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                <i class="fas fa-upload mr-2"></i>📤 Restore Data
+                            </button>
+                        </div>
+                        <div class="text-xs text-blue-700 mt-2">
+                            💡 Backup includes all orders, customers, and settings
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                        <h4 class="font-semibold text-red-900 mb-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone
+                        </h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            <button onclick="clearAllData()" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-medium transition-colors text-sm">
+                                <i class="fas fa-trash mr-2"></i>🗑️ Clear All Data
+                            </button>
+                        </div>
+                        <div class="text-xs text-red-700 mt-2">
+                            ⚠️ This action cannot be undone!
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Business Settings -->
+            <div class="advanced-card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-building mr-2 text-blue-600"></i>Business Settings
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                        <input type="text" id="business-name" value="My Business" class="search-advanced">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                        <input type="tel" id="business-phone" value="+91 9876543210" class="search-advanced">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="business-email" value="contact@mybusiness.com" class="search-advanced">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                        <textarea id="business-address" rows="3" class="search-advanced">123 Business Street, City, State - 123456</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gate Pass Settings -->
+            <div class="advanced-card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-receipt mr-2 text-green-600"></i>Gate Pass Settings
+                </h3>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Paper Size</label>
+                            <select id="gate-pass-size" class="search-advanced">
+                                <option value="3inch" selected>3 Inch Thermal</option>
+                                <option value="4inch">4 Inch Thermal</option>
+                                <option value="a4">A4 Paper</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Include QR Code</label>
+                            <select id="include-qr" class="search-advanced">
+                                <option value="true" selected>Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+                            <select id="gate-pass-font-size" class="search-advanced">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="auto-print-gate-pass" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm font-medium text-gray-700">Auto-print gate pass on order creation</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <button onclick="saveSettings()" class="advanced-button">
+                <i class="fas fa-save mr-2"></i>Save Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Order Modal -->
+    <div id="create-order-modal" class="fixed inset-0 modal-advanced hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content-advanced max-w-2xl w-full">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Create New Order</h3>
+                            <p class="text-gray-600 text-sm">Fill in the details to create a new order</p>
+                        </div>
+                        <button onclick="closeCreateOrderModal()" class="text-gray-400 hover:text-gray-600 text-xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <form id="create-order-form" class="space-y-4">
+                        <!-- Customer Details -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-semibold text-gray-900 mb-3">
+                                <i class="fas fa-user mr-2 text-blue-600"></i>Customer Details
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
+                                    <input type="tel" id="customer-mobile" required class="search-advanced" placeholder="Enter mobile number" maxlength="10" oninput="autoFillCustomerDetails(this.value)">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+                                    <input type="text" id="customer-name" required class="search-advanced">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input type="email" id="customer-email" class="search-advanced" placeholder="Optional">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                    <input type="text" id="customer-address" class="search-advanced" placeholder="Optional">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Details -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-semibold text-gray-900 mb-3">
+                                <i class="fas fa-box mr-2 text-green-600"></i>Product Details
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                                    <input type="text" id="product-name" required class="search-advanced">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                                    <input type="number" id="product-quantity" required min="1" class="search-advanced" oninput="calculateTotal()">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price (₹) *</label>
+                                    <input type="number" id="product-price" required min="0" step="0.01" class="search-advanced" oninput="calculateTotal()">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                                    <input type="number" id="total-amount" readonly class="search-advanced bg-green-50 border-green-200" style="font-weight: 600; color: #059669;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" onclick="closeCreateOrderModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                                Cancel
+                            </button>
+                            <button type="submit" class="advanced-button px-6 py-2">
+                                <i class="fas fa-plus mr-2"></i>Create Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let orders = [];
+        let appSettings = {
+            businessName: 'My Business',
+            businessPhone: '+91 9876543210',
+            businessEmail: 'contact@mybusiness.com',
+            businessAddress: '123 Business Street, City, State - 123456'
+        };
+        let customerDatabase = {};
+        
+        // System variables
+        let systemInfo = {
+            status: 'online',
+            lastUpdated: new Date().toISOString(),
+            totalOrders: 0,
+            totalCustomers: 0
+        };
+
+        // QR Scanner variables
+        let qrScanner = null;
+        let isScanning = false;
+        let videoStream = null;
+        let recentDeliveries = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing Complete Order Management System - ULTRA-FAST SYNC Version...');
+            
+            try {
+                // Set initialization flag to prevent notification spam
+                window.isInitializing = true;
+                
+                // Block problematic CDN requests immediately
+                blockProblematicRequests();
+                
+                loadData();
+                initializeApp();
+                updateAllDashboards();
+                updateSystemInfo();
+                
+                // Enhanced device sync detection
+                const deviceInfo = getDeviceInfo();
+                console.log('📱 Device Info:', deviceInfo);
+                
+                // Auto-sync on page load if connected or different device detected
+                if (googleWebAppConfig.isConnected) {
+                    setTimeout(() => {
+                        console.log('🔄 Auto-syncing on page load...');
+                        if (window.needsDeviceSync) {
+                            console.log('📱 Different device detected - forcing sync');
+                            showNotification('📱 Different device detected! Syncing data from server...', 'info', 4000);
+                        }
+                        syncWithGoogleWebApp();
+                    }, 2000);
+                } else if (window.needsDeviceSync) {
+                    showNotification('📱 Different device detected! Connect to Google Sheets to sync your data across devices.', 'info', 6000);
+                } else {
+                    // Check if user has Google Sheets URL saved but not connected
+                    const savedUrl = localStorage.getItem('googleWebAppUrl');
+                    if (savedUrl) {
+                        showNotification('🔗 Google Sheets URL found! Click "Connect" in Settings to enable sync.', 'info', 4000);
+                    }
+                }
+                
+                console.log('✅ System initialized successfully!');
+                console.log('📊 Current data:', {
+                    orders: orders.length,
+                    customers: Object.keys(customerDatabase).length,
+                    isConnected: googleWebAppConfig.isConnected,
+                    syncMode: googleWebAppConfig.realtimeSyncEnabled ? 'ULTRA-FAST (3s)' : 'Auto (10s)'
+                });
+                
+                // Clear initialization flag
+                window.isInitializing = false;
+                
+                const syncStatus = googleWebAppConfig.isConnected ? 
+                    `⚡ ULTRA-FAST sync active (${googleWebAppConfig.realtimeSyncEnabled ? '3s real-time' : '10s auto'})` : 
+                    'Connect to Google Sheets for instant sync';
+                
+                showNotification(`🚀 System loaded successfully! ${syncStatus}. Ready to manage orders.`, 'success', 5000);
+                
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                showNotification('⚠️ System initialization error. Please refresh page.', 'error', 5000);
+            }
+        });
+
+        // Initialize app
+        function initializeApp() {
+            const savedSettings = localStorage.getItem('appSettings');
+            if (savedSettings) {
+                appSettings = { ...appSettings, ...JSON.parse(savedSettings) };
+                updateSettingsForm();
+            }
+
+            const savedCustomers = localStorage.getItem('customerDatabase');
+            if (savedCustomers) {
+                customerDatabase = JSON.parse(savedCustomers);
+            }
+
+            // Load Google Web App configuration
+            const savedGoogleConfig = localStorage.getItem('googleWebAppConfig');
+            if (savedGoogleConfig) {
+                googleWebAppConfig = { ...googleWebAppConfig, ...JSON.parse(savedGoogleConfig) };
+                
+                // Update UI with saved config
+                if (document.getElementById('google-webapp-url') && googleWebAppConfig.webAppUrl) {
+                    document.getElementById('google-webapp-url').value = googleWebAppConfig.webAppUrl;
+                }
+                
+                if (document.getElementById('webapp-password') && googleWebAppConfig.password) {
+                    document.getElementById('webapp-password').value = googleWebAppConfig.password;
+                }
+                
+                if (googleWebAppConfig.isConnected) {
+                    updateSyncStatus('✅ Connected', 'green');
+                    updateLastSyncTime();
+                    
+                    // Start auto-sync if enabled
+                    if (googleWebAppConfig.autoSyncEnabled) {
+                        startAutoSync();
+                    }
+                }
+            }
+
+            document.getElementById('create-order-form').addEventListener('submit', handleCreateOrder);
+            
+            // Auto-sync checkbox handlers
+            const autoSyncCheckbox = document.getElementById('auto-sync-enabled');
+            if (autoSyncCheckbox) {
+                autoSyncCheckbox.addEventListener('change', function() {
+                    googleWebAppConfig.autoSyncEnabled = this.checked;
+                    localStorage.setItem('googleWebAppConfig', JSON.stringify(googleWebAppConfig));
+                    
+                    if (this.checked && googleWebAppConfig.isConnected) {
+                        startAutoSync();
+                    } else {
+                        stopAutoSync();
+                    }
+                });
+            }
+
+            const realtimeSyncCheckbox = document.getElementById('realtime-sync-enabled');
+            if (realtimeSyncCheckbox) {
+                realtimeSyncCheckbox.addEventListener('change', function() {
+                    googleWebAppConfig.realtimeSyncEnabled = this.checked;
+                    localStorage.setItem('googleWebAppConfig', JSON.stringify(googleWebAppConfig));
+                    
+                    if (this.checked && googleWebAppConfig.isConnected) {
+                        // ULTRA-FAST real-time sync - 3 seconds
+                        googleWebAppConfig.syncInterval = googleWebAppConfig.syncInterval; // 3000ms
+                        startAutoSync();
+                        showNotification('⚡ ULTRA-FAST Real-time sync enabled! Changes sync in 3 seconds.', 'success', 4000);
+                    } else {
+                        // Normal auto-sync - 50 seconds
+                        googleWebAppConfig.syncInterval = googleWebAppConfig.normalSyncInterval; // 50000ms
+                        if (googleWebAppConfig.autoSyncEnabled) {
+                            startAutoSync();
+                        }
+                        showNotification('🔄 Normal auto-sync enabled! Changes sync every 5 seconds.', 'info', 3000);
+                    }
+                });
+            }
+        }
+
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(pageId + '-page').classList.add('active');
+            event.target.closest('.nav-tab').classList.add('active');
+
+            switch(pageId) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'all-orders':
+                    updateAllOrdersPage();
+                    break;
+                case 'processing':
+                    updateProcessingPage();
+                    break;
+                case 'ready':
+                    updateReadyPage();
+                    break;
+                case 'dispatch':
+                    updateDispatchPage();
+                    break;
+                case 'settings':
+                    updateSystemInfo();
+                    break;
+            }
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            const stats = calculateOrderStats();
+            
+            document.getElementById('total-orders').textContent = stats.total;
+            document.getElementById('processing-orders').textContent = stats.processing;
+            document.getElementById('ready-orders').textContent = stats.ready;
+            document.getElementById('total-revenue').textContent = '₹' + stats.revenue.toLocaleString();
+
+            const recentOrders = orders.slice(-5).reverse();
+            const recentOrdersContainer = document.getElementById('recent-orders');
+            
+            if (recentOrders.length === 0) {
+                recentOrdersContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p class="text-lg mb-2">No orders yet. Create your first order!</p>
+                        <p class="text-sm mb-4">Start managing your orders with this powerful system</p>
+                        <button onclick="showCreateOrderModal()" class="advanced-button">
+                            <i class="fas fa-plus mr-2"></i>Create First Order
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            recentOrdersContainer.innerHTML = recentOrders.map(order => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">
+                            ${order.id.slice(-2)}
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">${order.customerName}</h4>
+                            <p class="text-sm text-gray-600">${order.productName} × ${order.quantity}</p>
+                            <p class="text-xs text-gray-500">Order: ${order.id}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="status-${order.status} px-3 py-1 rounded-full text-sm font-medium mb-1">
+                            ${getStatusIcon(order.status)} ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </div>
+                        <p class="text-sm font-semibold text-gray-900">₹${order.totalAmount.toLocaleString()}</p>
+                        <p class="text-xs text-gray-500">${new Date(order.createdAt).toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update all orders page
+        function updateAllOrdersPage() {
+            updateOrdersGrid('orders-grid', orders, 'all-orders');
+            document.getElementById('orders-count').textContent = `Total: ${orders.length} orders`;
+        }
+
+        // Update processing page
+        function updateProcessingPage() {
+            const processingOrders = orders.filter(order => order.status === 'processing');
+            updateOrdersGrid('processing-orders-grid', processingOrders, 'processing');
+            document.getElementById('processing-count').textContent = processingOrders.length;
+        }
+
+        // Update ready page
+        function updateReadyPage() {
+            const readyOrders = orders.filter(order => order.status === 'ready');
+            updateOrdersGrid('ready-orders-grid', readyOrders, 'ready');
+            document.getElementById('ready-count').textContent = readyOrders.length;
+        }
+
+        // Update dispatch page
+        function updateDispatchPage() {
+            const dispatchOrders = orders.filter(order => order.status === 'dispatched');
+            updateOrdersGrid('dispatch-orders-grid', dispatchOrders, 'dispatch');
+            document.getElementById('dispatch-count').textContent = dispatchOrders.length;
+            
+            // Add test QR button when dispatch page is loaded
+            setTimeout(() => {
+                addTestQRButton();
+                updateRecentDeliveries();
+            }, 100);
+        }
+
+        // Update orders grid
+        function updateOrdersGrid(containerId, ordersToShow, currentPage = '') {
+            const container = document.getElementById(containerId);
+            
+            if (ordersToShow.length === 0) {
+                let emptyMessage = 'No orders found';
+                let emptyDescription = 'Orders will appear here when available';
+                
+                if (currentPage === 'processing') {
+                    emptyMessage = 'No orders in processing';
+                    emptyDescription = 'New orders will appear here automatically';
+                } else if (currentPage === 'ready') {
+                    emptyMessage = 'No orders ready';
+                    emptyDescription = 'Orders marked as ready will appear here';
+                } else if (currentPage === 'dispatch') {
+                    emptyMessage = 'No dispatched orders';
+                    emptyDescription = 'Dispatched orders will appear here';
+                }
+                
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-6xl mb-4"></i>
+                        <p class="text-xl mb-2">${emptyMessage}</p>
+                        <p>${emptyDescription}</p>
+                        ${currentPage === 'all-orders' ? `
+                        <button onclick="showCreateOrderModal()" class="mt-4 advanced-button">
+                            <i class="fas fa-plus mr-2"></i>Create New Order
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = ordersToShow.map(order => `
+                <div class="advanced-card p-6 card-shadow hover:shadow-lg transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">
+                                ${order.id.slice(-2)}
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">${order.customerName}</h3>
+                                <p class="text-sm text-gray-600">${order.customerMobile}</p>
+                                <p class="text-xs text-gray-500">Order: ${order.id}</p>
+                            </div>
+                        </div>
+                        <div class="status-${order.status} px-3 py-1 rounded-full text-sm font-medium">
+                            ${getStatusIcon(order.status)} ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Product:</span>
+                            <span class="font-medium">${order.productName}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Quantity:</span>
+                            <span class="font-medium">${order.quantity}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Unit Price:</span>
+                            <span class="font-medium">₹${order.unitPrice.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Amount:</span>
+                            <span class="font-bold text-green-600">₹${order.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Date:</span>
+                            <span class="text-sm">${new Date(order.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Time:</span>
+                            <span class="text-sm">${new Date(order.createdAt).toLocaleTimeString()}</span>
+                        </div>
+                        ${order.customerEmail ? `
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Email:</span>
+                            <span class="text-sm">${order.customerEmail}</span>
+                        </div>
+                        ` : ''}
+                        ${order.customerAddress ? `
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Address:</span>
+                            <span class="text-sm">${order.customerAddress}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        ${getOrderActionButtons(order, currentPage)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get status icon
+        function getStatusIcon(status) {
+            const icons = {
+                pending: '⏳',
+                processing: '⚙️',
+                ready: '✅',
+                dispatched: '🚚',
+                delivered: '🎉',
+                cancelled: '❌'
+            };
+            return icons[status] || '📦';
+        }
+
+        // Get order action buttons
+        function getOrderActionButtons(order, currentPage = '') {
+            const buttons = [];
+            
+            switch(order.status) {
+                case 'processing':
+                    buttons.push(`<button onclick="updateOrderStatus('${order.id}', 'ready')" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">✅ Mark Ready</button>`);
+                    break;
+                case 'ready':
+                    buttons.push(`<button onclick="updateOrderStatus('${order.id}', 'dispatched')" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">🚚 Dispatch</button>`);
+                    break;
+                case 'dispatched':
+                    buttons.push(`<button onclick="updateOrderStatus('${order.id}', 'delivered')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">🎉 Mark Delivered</button>`);
+                    break;
+                case 'delivered':
+                    buttons.push(`<span class="flex-1 text-center text-green-600 font-medium py-2">✅ Completed</span>`);
+                    break;
+                case 'cancelled':
+                    buttons.push(`<span class="flex-1 text-center text-red-600 font-medium py-2">❌ Cancelled</span>`);
+                    break;
+            }
+            
+            if (currentPage === 'all-orders') {
+                if (order.status !== 'cancelled') {
+                    buttons.push(`<button onclick="printGatePass('${order.id}')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">📋 Gate Pass</button>`);
+                }
+                
+                if (order.status !== 'delivered' && order.status !== 'cancelled') {
+                    buttons.push(`<button onclick="updateOrderStatus('${order.id}', 'cancelled')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">❌ Cancel</button>`);
+                }
+            }
+            
+            return buttons.join('');
+        }
+
+        // Calculate order statistics
+        function calculateOrderStats() {
+            const stats = {
+                total: orders.length,
+                processing: 0,
+                ready: 0,
+                dispatched: 0,
+                delivered: 0,
+                cancelled: 0,
+                revenue: 0
+            };
+
+            orders.forEach(order => {
+                stats[order.status]++;
+                if (order.status !== 'cancelled') {
+                    stats.revenue += order.totalAmount;
+                }
+            });
+
+            return stats;
+        }
+
+        // Update all dashboards
+        function updateAllDashboards() {
+            updateDashboard();
+            updateAllOrdersPage();
+            updateProcessingPage();
+            updateReadyPage();
+            updateDispatchPage();
+        }
+
+        // Show create order modal
+        function showCreateOrderModal() {
+            document.getElementById('create-order-modal').classList.remove('hidden');
+            document.getElementById('customer-mobile').focus();
+        }
+
+        // Close create order modal
+        function closeCreateOrderModal() {
+            document.getElementById('create-order-modal').classList.add('hidden');
+            document.getElementById('create-order-form').reset();
+        }
+
+        // Handle create order form submission
+        function handleCreateOrder(e) {
+            e.preventDefault();
+            
+            const formData = {
+                customerMobile: document.getElementById('customer-mobile').value.trim(),
+                customerName: document.getElementById('customer-name').value.trim(),
+                customerEmail: document.getElementById('customer-email').value.trim(),
+                customerAddress: document.getElementById('customer-address').value.trim(),
+                productName: document.getElementById('product-name').value.trim(),
+                quantity: parseInt(document.getElementById('product-quantity').value),
+                unitPrice: parseFloat(document.getElementById('product-price').value),
+                totalAmount: parseFloat(document.getElementById('total-amount').value)
+            };
+
+            if (!formData.customerMobile || !formData.customerName || !formData.productName || !formData.quantity || !formData.unitPrice) {
+                showNotification('❌ Please fill all required fields', 'error', 3000);
+                return;
+            }
+
+            const newOrder = {
+                id: generateOrderId(),
+                ...formData,
+                status: 'processing',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            orders.unshift(newOrder);
+
+            customerDatabase[formData.customerMobile] = {
+                name: formData.customerName,
+                email: formData.customerEmail,
+                address: formData.customerAddress,
+                lastOrderDate: new Date().toISOString()
+            };
+
+            saveData();
+            updateAllDashboards();
+            closeCreateOrderModal();
+            
+            showNotification(`✅ Order ${newOrder.id} created successfully and started processing!`, 'success', 4000);
+            
+            const autoPrint = document.getElementById('auto-print-gate-pass')?.checked !== false;
+            if (autoPrint) {
+                setTimeout(() => {
+                    generateGatePass(newOrder.id);
+                    showNotification(`📋 Gate pass auto-generated for order ${newOrder.id}`, 'info', 3000);
+                }, 1000);
+            }
+            
+            updateSystemInfo();
+        }
+
+        // Generate order ID
+        function generateOrderId() {
+            const timestamp = Date.now().toString();
+            const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+            return `ORD${timestamp.slice(-6)}${random}`;
+        }
+
+        // Calculate total amount
+        function calculateTotal() {
+            const quantity = parseFloat(document.getElementById('product-quantity').value) || 0;
+            const unitPrice = parseFloat(document.getElementById('product-price').value) || 0;
+            const total = quantity * unitPrice;
+            document.getElementById('total-amount').value = total.toFixed(2);
+        }
+
+        // Auto-fill customer details
+        function autoFillCustomerDetails(mobile) {
+            if (mobile.length === 10 && customerDatabase[mobile]) {
+                const customer = customerDatabase[mobile];
+                document.getElementById('customer-name').value = customer.name || '';
+                document.getElementById('customer-email').value = customer.email || '';
+                document.getElementById('customer-address').value = customer.address || '';
+                showNotification('✅ Customer details auto-filled from database', 'success', 2000);
+            }
+        }
+
+        // Update order status
+        function updateOrderStatus(orderId, newStatus) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            if (newStatus === 'cancelled') {
+                const confirmCancel = confirm(`⚠️ Are you sure you want to CANCEL Order ${orderId}?\n\nCustomer: ${order.customerName}\nProduct: ${order.productName}\nAmount: ₹${order.totalAmount.toLocaleString()}\n\n❌ This action cannot be undone!`);
+                
+                if (!confirmCancel) {
+                    showNotification('❌ Order cancellation cancelled', 'info', 2000);
+                    return;
+                }
+            }
+
+            const oldStatus = order.status;
+            order.status = newStatus;
+            order.updatedAt = new Date().toISOString();
+
+            if (!order.statusHistory) order.statusHistory = [];
+            order.statusHistory.push({
+                status: newStatus,
+                timestamp: new Date().toISOString(),
+                previousStatus: oldStatus
+            });
+
+            saveData();
+            updateAllDashboards();
+            updateSystemInfo();
+            
+            if (newStatus === 'cancelled') {
+                showNotification(`❌ Order ${orderId} successfully cancelled`, 'success', 3000);
+            } else {
+                showNotification(`✅ Order ${orderId} status updated to ${newStatus}`, 'success', 3000);
+            }
+        }
+
+        // Filter orders
+        function filterOrders() {
+            const searchTerm = document.getElementById('search-orders').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+            
+            let filteredOrders = orders;
+            
+            if (searchTerm) {
+                filteredOrders = filteredOrders.filter(order => 
+                    order.id.toLowerCase().includes(searchTerm) ||
+                    order.customerName.toLowerCase().includes(searchTerm) ||
+                    order.customerMobile.includes(searchTerm) ||
+                    order.productName.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (statusFilter) {
+                filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
+            }
+            
+            updateOrdersGrid('orders-grid', filteredOrders, 'all-orders');
+            document.getElementById('orders-count').textContent = `Showing: ${filteredOrders.length} of ${orders.length} orders`;
+        }
+
+        // Filter by status
+        function filterByStatus(status) {
+            document.getElementById('filter-status').value = status;
+            
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            filterOrders();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('search-orders').value = '';
+            document.getElementById('filter-status').value = '';
+            
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.status-filter-btn').classList.add('active');
+            
+            updateAllOrdersPage();
+        }
+
+        // Generate gate pass with QR code
+        function generateGatePass(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const gatePassSize = document.getElementById('gate-pass-size')?.value || '3inch';
+            const includeQR = document.getElementById('include-qr')?.value !== 'false';
+            const fontSize = document.getElementById('gate-pass-font-size')?.value || 'medium';
+
+            let width, fontSize_px;
+            switch(gatePassSize) {
+                case '3inch':
+                    width = '72mm';
+                    fontSize_px = fontSize === 'small' ? '10px' : fontSize === 'large' ? '14px' : '12px';
+                    break;
+                case '4inch':
+                    width = '96mm';
+                    fontSize_px = fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px';
+                    break;
+                case 'a4':
+                    width = '210mm';
+                    fontSize_px = fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px';
+                    break;
+            }
+
+            let qrCodeImg = '';
+            if (includeQR) {
+                const qrData = encodeURIComponent(`ORDER:${order.id}|CUSTOMER:${order.customerName}|MOBILE:${order.customerMobile}|PRODUCT:${order.productName}|QTY:${order.quantity}|AMT:${order.totalAmount}`);
+                const qrSize = gatePassSize === '3inch' ? 120 : gatePassSize === '4inch' ? 150 : 200;
+                qrCodeImg = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${qrData}" style="max-width: 100%; height: auto;" alt="QR Code">`;
+            }
+
+            const gatePassHTML = `
+                <div style="width: ${width}; margin: 0 auto; padding: 10px; font-family: 'Courier New', monospace; font-size: ${fontSize_px}; line-height: 1.4; border: 1px solid #000;">
+                    <div style="text-align: center; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 8px;">
+                        <div style="font-weight: bold; font-size: ${fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px'};">${appSettings.businessName}</div>
+                        <div style="font-size: ${fontSize === 'small' ? '8px' : fontSize === 'large' ? '12px' : '10px'};">${appSettings.businessPhone}</div>
+                        <div style="font-size: ${fontSize === 'small' ? '8px' : fontSize === 'large' ? '12px' : '10px'};">${appSettings.businessAddress}</div>
+                    </div>
+                    
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 8px; font-size: ${fontSize === 'small' ? '10px' : fontSize === 'large' ? '14px' : '12px'};">
+                        🎫 GATE PASS 🎫
+                    </div>
+                    
+                    <div style="margin-bottom: 8px;">
+                        <div><strong>Order ID:</strong> ${order.id}</div>
+                        <div><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div><strong>Time:</strong> ${new Date(order.createdAt).toLocaleTimeString()}</div>
+                    </div>
+                    
+                    <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; margin: 8px 0;">
+                        <div><strong>Customer:</strong> ${order.customerName}</div>
+                        <div><strong>Mobile:</strong> ${order.customerMobile}</div>
+                        ${order.customerAddress ? `<div><strong>Address:</strong> ${order.customerAddress}</div>` : ''}
+                    </div>
+                    
+                    <div style="margin: 8px 0;">
+                        <div><strong>Product:</strong> ${order.productName}</div>
+                        <div><strong>Quantity:</strong> ${order.quantity}</div>
+                        <div><strong>Amount:</strong> ₹${order.totalAmount.toLocaleString()}</div>
+                    </div>
+                    
+                    ${includeQR ? `
+                    <div style="text-align: center; margin: 8px 0; padding: 8px; border: 1px dashed #000;">
+                        <div style="font-size: ${fontSize === 'small' ? '8px' : fontSize === 'large' ? '12px' : '10px'}; margin-bottom: 4px;">📱 SCAN FOR DELIVERY</div>
+                        ${qrCodeImg}
+                        <div style="font-size: ${fontSize === 'small' ? '6px' : fontSize === 'large' ? '10px' : '8px'}; margin-top: 4px;">Order: ${order.id}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="border-top: 1px solid #000; padding-top: 4px; margin-top: 8px; text-align: center; font-size: ${fontSize === 'small' ? '8px' : fontSize === 'large' ? '12px' : '10px'};">
+                        <strong>Status: ${order.status.toUpperCase()}</strong>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 8px; font-size: ${fontSize === 'small' ? '8px' : fontSize === 'large' ? '12px' : '10px'};">
+                        🙏 Thank you for your business! 🙏
+                    </div>
+                </div>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Gate Pass - ${order.id}</title>
+                    <style>
+                        body { margin: 0; padding: 20px; }
+                        @media print {
+                            body { margin: 0; padding: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${gatePassHTML}
+                    <div class="no-print" style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.print()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 14px;">
+                            🖨️ Print Gate Pass
+                        </button>
+                        <button onclick="window.close()" style="background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                            ❌ Close
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+            showNotification(`✅ Gate pass with QR code generated for order ${order.id}`, 'success', 3000);
+        }
+
+        // Print gate pass
+        function printGatePass(orderId) {
+            generateGatePass(orderId);
+        }
+
+        // Update settings form
+        function updateSettingsForm() {
+            if (document.getElementById('business-name')) {
+                document.getElementById('business-name').value = appSettings.businessName;
+                document.getElementById('business-phone').value = appSettings.businessPhone;
+                document.getElementById('business-email').value = appSettings.businessEmail;
+                document.getElementById('business-address').value = appSettings.businessAddress;
+            }
+        }
+
+        // Save settings
+        function saveSettings() {
+            appSettings.businessName = document.getElementById('business-name').value;
+            appSettings.businessPhone = document.getElementById('business-phone').value;
+            appSettings.businessEmail = document.getElementById('business-email').value;
+            appSettings.businessAddress = document.getElementById('business-address').value;
+
+            localStorage.setItem('appSettings', JSON.stringify(appSettings));
+            showNotification('✅ Settings saved successfully!', 'success', 3000);
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const savedOrders = localStorage.getItem('orders');
+            if (savedOrders) {
+                orders = JSON.parse(savedOrders);
+                console.log('📱 Loaded orders from local storage:', orders.length);
+            }
+
+            const savedCustomers = localStorage.getItem('customerDatabase');
+            if (savedCustomers) {
+                customerDatabase = JSON.parse(savedCustomers);
+                console.log('👥 Loaded customers from local storage:', Object.keys(customerDatabase).length);
+            }
+
+            const savedSettings = localStorage.getItem('appSettings');
+            if (savedSettings) {
+                appSettings = { ...appSettings, ...JSON.parse(savedSettings) };
+            }
+            
+            // Check if this is a different device by comparing device fingerprint
+            const deviceId = getDeviceFingerprint();
+            const lastDeviceId = localStorage.getItem('lastDeviceId');
+            
+            if (lastDeviceId && lastDeviceId !== deviceId) {
+                console.log('🔄 Different device detected, will sync data from server');
+                // Mark for immediate sync
+                window.needsDeviceSync = true;
+            }
+            
+            localStorage.setItem('lastDeviceId', deviceId);
+        }
+
+        // Save data to localStorage and INSTANT sync with Google Web App
+        function saveData() {
+            // Add timestamp to track when data was last modified locally
+            const saveTimestamp = new Date().toISOString();
+            
+            // Mark orders with local modification timestamp for ultra-fast sync
+            orders.forEach(order => {
+                if (!order.syncTimestamp || order.needsUpload) {
+                    order.lastModified = saveTimestamp;
+                    order.needsUpload = true;
+                }
+            });
+            
+            localStorage.setItem('orders', JSON.stringify(orders));
+            localStorage.setItem('customerDatabase', JSON.stringify(customerDatabase));
+            localStorage.setItem('appSettings', JSON.stringify(appSettings));
+            localStorage.setItem('lastDataModification', saveTimestamp);
+            
+            console.log('💾 Data saved locally with timestamp:', saveTimestamp);
+            
+            // INSTANT SYNC with Google Web App if connected
+            if (googleWebAppConfig.isConnected) {
+                if (googleWebAppConfig.realtimeSyncEnabled) {
+                    // IMMEDIATE sync for real-time mode (no debounce)
+                    console.log('⚡ Triggering INSTANT sync...');
+                    clearTimeout(window.syncTimeout);
+                    window.syncTimeout = setTimeout(() => {
+                        window.isAutoSync = true;
+                        syncWithGoogleWebApp();
+                        window.isAutoSync = false;
+                    }, 500); // Ultra-fast 500ms delay for instant feel
+                    
+                } else if (googleWebAppConfig.autoSyncEnabled) {
+                    // Quick sync for auto-sync mode
+                    clearTimeout(window.syncTimeout);
+                    window.syncTimeout = setTimeout(() => {
+                        window.isAutoSync = true;
+                        syncWithGoogleWebApp();
+                        window.isAutoSync = false;
+                    }, 2000); // 2 second delay for auto-sync
+                }
+                
+                // Show instant feedback
+                updateSyncStatus('🔄 Syncing...', 'blue');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // System Functions
+        function updateSystemInfo() {
+            systemInfo.totalOrders = orders.length;
+            systemInfo.totalCustomers = Object.keys(customerDatabase).length;
+            systemInfo.lastUpdated = new Date().toISOString();
+            
+            const totalOrdersEl = document.getElementById('system-total-orders');
+            const totalCustomersEl = document.getElementById('system-total-customers');
+            const lastUpdatedEl = document.getElementById('system-last-updated');
+            
+            if (totalOrdersEl) totalOrdersEl.textContent = systemInfo.totalOrders;
+            if (totalCustomersEl) totalCustomersEl.textContent = systemInfo.totalCustomers;
+            if (lastUpdatedEl) lastUpdatedEl.textContent = getTimeAgo(new Date(systemInfo.lastUpdated));
+        }
+
+        // Enhanced Backup & Restore Functions
+        function createFullBackup() {
+            const backupData = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                orders: orders,
+                customers: customerDatabase,
+                settings: appSettings,
+                systemInfo: systemInfo,
+                backupType: 'full'
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `order-management-full-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification('📥 Full backup created and downloaded successfully!', 'success', 4000);
+        }
+
+        function restoreFromBackup() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const backupData = JSON.parse(e.target.result);
+                        
+                        if (!backupData.version || !backupData.timestamp) {
+                            showNotification('❌ Invalid backup file format!', 'error', 3000);
+                            return;
+                        }
+                        
+                        const confirmRestore = confirm(`🔄 Restore data from backup?\n\nBackup Date: ${new Date(backupData.timestamp).toLocaleString()}\nOrders: ${backupData.orders?.length || 0}\nCustomers: ${Object.keys(backupData.customers || {}).length}\n\n⚠️ This will replace all current data!`);
+                        
+                        if (!confirmRestore) return;
+                        
+                        if (backupData.orders) orders = backupData.orders;
+                        if (backupData.customers) customerDatabase = backupData.customers;
+                        if (backupData.settings) appSettings = {...appSettings, ...backupData.settings};
+                        
+                        saveData();
+                        updateAllDashboards();
+                        updateSystemInfo();
+                        updateSettingsForm();
+                        
+                        showNotification(`📤 Data restored successfully from ${new Date(backupData.timestamp).toLocaleDateString()}!`, 'success', 4000);
+                        
+                    } catch (error) {
+                        console.error('Restore error:', error);
+                        showNotification('❌ Error restoring backup file!', 'error', 3000);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        // Google Apps Script Web App Integration Functions
+        let googleWebAppConfig = {
+            webAppUrl: '',
+            password: '',
+            isConnected: false,
+            autoSyncEnabled: true,
+            realtimeSyncEnabled: true,
+            lastSyncTime: null,
+            syncInterval: 3000, // Ultra-fast 3 seconds for real-time
+            normalSyncInterval: 50000, // 5 seconds for normal auto-sync
+            instantSyncDelay: 500, // 500ms for instant sync after changes
+            maxSyncRetries: 3,
+            consecutiveFailures: 0
+        };
+        
+        let syncInterval = null;
+
+        // Google Apps Script Web App Functions
+        function connectGoogleWebApp() {
+            const webAppUrl = document.getElementById('google-webapp-url').value.trim();
+            const password = document.getElementById('webapp-password').value.trim();
+            
+            if (!webAppUrl) {
+                showNotification('❌ Please enter Google Apps Script Web App URL', 'error', 3000);
+                return;
+            }
+            
+            if (!webAppUrl.includes('script.google.com/macros/s/') || !webAppUrl.includes('/exec')) {
+                showNotification('❌ Invalid Google Apps Script Web App URL format', 'error', 3000);
+                return;
+            }
+            
+            googleWebAppConfig.webAppUrl = webAppUrl;
+            googleWebAppConfig.password = password;
+            
+            // Test connection
+            testGoogleWebAppConnection();
+        }
+
+        async function testGoogleWebAppConnection() {
+            try {
+                updateSyncStatus('🔄 Testing connection...', 'blue');
+                
+                console.log('🔧 Testing connection to:', googleWebAppConfig.webAppUrl);
+                
+                // FIXED: Use GET request first to test basic connectivity
+                console.log('🔄 Step 1: Testing GET request...');
+                
+                const getResponse = await fetch(googleWebAppConfig.webAppUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                
+                console.log('📥 GET response status:', getResponse.status);
+                
+                if (!getResponse.ok) {
+                    throw new Error(`Web App not accessible: HTTP ${getResponse.status}. Check deployment settings.`);
+                }
+                
+                const getResult = await getResponse.json();
+                console.log('📥 GET result:', getResult);
+                
+                if (!getResult.success || !getResult.message) {
+                    throw new Error('Web App not responding correctly. Check script code.');
+                }
+                
+                // FIXED: Now test POST with proper form data format
+                console.log('🔄 Step 2: Testing POST request with form data...');
+                
+                const testData = {
+                    action: 'test',
+                    password: googleWebAppConfig.password || '',
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Use FormData for better compatibility with Google Apps Script
+                const formData = new FormData();
+                formData.append('payload', JSON.stringify(testData));
+                
+                const postResponse = await fetch(googleWebAppConfig.webAppUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors'
+                });
+                
+                console.log('📥 POST response status:', postResponse.status);
+                
+                if (postResponse.ok) {
+                    const postResult = await postResponse.json();
+                    console.log('📥 POST result:', postResult);
+                    
+                    if (postResult.success) {
+                        googleWebAppConfig.isConnected = true;
+                        localStorage.setItem('googleWebAppConfig', JSON.stringify(googleWebAppConfig));
+                        updateSyncStatus('✅ Connected', 'green');
+                        
+                        let successMessage = `✅ Connection successful! Both GET and POST working.`;
+                        if (postResult.spreadsheetUrl) {
+                            successMessage += `\n📊 Database: ${postResult.spreadsheetUrl}`;
+                        }
+                        
+                        showNotification(successMessage, 'success', 5000);
+                        
+                        if (document.getElementById('auto-sync-enabled').checked) {
+                            startAutoSync();
+                        }
+                        
+                        return;
+                    }
+                }
+                
+                // Fallback: If POST fails but GET works, still mark as connected
+                console.log('⚠️ POST failed but GET works - marking as connected for basic functionality');
+                googleWebAppConfig.isConnected = true;
+                localStorage.setItem('googleWebAppConfig', JSON.stringify(googleWebAppConfig));
+                updateSyncStatus('✅ Connected (GET only)', 'green');
+                
+                showNotification('✅ Basic connection successful! Web App is accessible.', 'success', 4000);
+                
+            } catch (error) {
+                console.error('❌ Connection error:', error);
+                googleWebAppConfig.isConnected = false;
+                updateSyncStatus('❌ Connection Failed', 'red');
+                
+                let errorMessage = '❌ Connection Failed: ' + error.message;
+                let fixSteps = '';
+                
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    fixSteps = `
+
+🔧 STEP-BY-STEP FIX for CORS/Connection Issues:
+
+**IMMEDIATE FIXES:**
+
+1️⃣ **Redeploy Your Web App (MOST IMPORTANT)**
+   • Go to script.google.com
+   • Open your project
+   • Click "Deploy" → "Manage deployments"
+   • Click Edit (pencil icon) next to your deployment
+   • Change "Version" to "New deployment"
+   • Set "Execute as: Me (your email)"
+   • Set "Who has access: Anyone"
+   • Click "Deploy"
+   • Copy the NEW Web App URL
+
+2️⃣ **Test URL in Browser First**
+   • Paste your Web App URL in browser
+   • Must show: "Order Management System Web App is running!"
+   • If you see error page, your script has issues
+
+3️⃣ **Check Script Authorization**
+   • In script editor, click "Run" button on doGet function
+   • Authorize all permissions when prompted
+   • Then redeploy (step 1)
+
+4️⃣ **Verify Script Code**
+   • Make sure you have BOTH doGet AND doPost functions
+   • Copy the complete code from "Get Script" button
+
+**COMMON ISSUES:**
+❌ Web App URL doesn't end with /exec
+❌ Access set to "Only myself" instead of "Anyone"  
+❌ Script not authorized properly
+❌ Missing doGet or doPost function`;
+                    
+                } else if (error.message.includes('not responding correctly')) {
+                    fixSteps = `
+
+🔧 Script Response Issue:
+   • Your script has errors or missing functions
+   • Go to script.google.com → Executions tab
+   • Check for error messages
+   • Make sure you copied COMPLETE code (both doGet and doPost)
+   • Run the script manually to test`;
+                }
+                
+                showNotification(errorMessage + fixSteps, 'error', 20000);
+            }
+        }
+
+        async function syncWithGoogleWebApp() {
+            if (!googleWebAppConfig.isConnected) {
+                console.log('❌ Sync attempted but not connected to Google Sheets');
+                showNotification('❌ Not connected to Google Sheets. Go to Settings to connect.', 'error', 4000);
+                return;
+            }
+            
+            try {
+                updateSyncStatus('🔄 Syncing...', 'blue');
+                console.log('🔄 Starting sync with Google Sheets...');
+                
+                // Enhanced sync data with device info
+                const syncData = {
+                    action: 'sync',
+                    password: googleWebAppConfig.password || '',
+                    timestamp: new Date().toISOString(),
+                    deviceInfo: getDeviceInfo(),
+                    data: {
+                        orders: orders || [],
+                        customers: customerDatabase || {},
+                        settings: appSettings || {},
+                        systemInfo: {
+                            ...systemInfo,
+                            lastSyncAttempt: new Date().toISOString(),
+                            deviceFingerprint: getDeviceFingerprint()
+                        }
+                    }
+                };
+                
+                console.log('📤 Sending enhanced sync data:', {
+                    action: syncData.action,
+                    ordersCount: syncData.data.orders.length,
+                    customersCount: Object.keys(syncData.data.customers).length,
+                    deviceInfo: syncData.deviceInfo.platform
+                });
+                
+                // Multiple request formats for maximum compatibility
+                let response;
+                let requestMethod = 'FormData';
+                
+                try {
+                    // Method 1: FormData (most compatible with Google Apps Script)
+                    const formData = new FormData();
+                    formData.append('payload', JSON.stringify(syncData));
+                    
+                    response = await fetch(googleWebAppConfig.webAppUrl, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'cors',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                } catch (formDataError) {
+                    console.log('FormData method failed, trying JSON...', formDataError);
+                    requestMethod = 'JSON';
+                    
+                    // Method 2: JSON fallback
+                    response = await fetch(googleWebAppConfig.webAppUrl, {
+                        method: 'POST',
+                        body: JSON.stringify(syncData),
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                }
+                
+                console.log(`📥 Sync response (${requestMethod}):`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}. Check Google Apps Script deployment.`);
+                }
+                
+                let result;
+                try {
+                    const responseText = await response.text();
+                    console.log('📥 Raw response:', responseText.substring(0, 300) + '...');
+                    
+                    result = JSON.parse(responseText);
+                    console.log('📥 Parsed sync result:', result);
+                    
+                } catch (jsonError) {
+                    console.log('JSON parse error, analyzing response...', jsonError);
+                    const responseText = await response.text();
+                    
+                    // Check for common error patterns
+                    if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html>')) {
+                        throw new Error('Google Apps Script returned HTML error page. Check script for errors in Executions tab.');
+                    }
+                    
+                    if (responseText.includes('Authorization required') || responseText.includes('permission')) {
+                        throw new Error('Authorization error. Run script manually once to authorize permissions.');
+                    }
+                    
+                    if (responseText.includes('success') || responseText.includes('Sync completed')) {
+                        result = { success: true, message: 'Sync completed (text response)', data: null };
+                    } else {
+                        throw new Error('Invalid response format. Response: ' + responseText.substring(0, 200));
+                    }
+                }
+                
+                if (result.success) {
+                    console.log('✅ Sync successful!');
+                    
+                    // Process any data received from server
+                    if (result.data) {
+                        console.log('📥 Processing server data...');
+                        await processServerData(result.data);
+                    }
+                    
+                    // Update sync configuration
+                    googleWebAppConfig.lastSyncTime = new Date().toISOString();
+                    googleWebAppConfig.lastSyncSuccess = true;
+                    googleWebAppConfig.consecutiveFailures = 0;
+                    localStorage.setItem('googleWebAppConfig', JSON.stringify(googleWebAppConfig));
+                    
+                    updateSyncStatus('✅ Synced', 'green');
+                    updateLastSyncTime();
+                    
+                    // Show success notification for manual sync
+                    if (!window.isAutoSync) {
+                        showNotification('🔄 Data synchronized successfully with Google Sheets! All devices will now have the latest data.', 'success', 4000);
+                    } else {
+                        console.log('🔄 Auto-sync completed successfully');
+                    }
+                    
+                } else {
+                    throw new Error(result.error || result.message || 'Sync failed - check Google Apps Script logs');
+                }
+                
+            } catch (error) {
+                console.error('❌ Sync error details:', error);
+                
+                // Track consecutive failures
+                googleWebAppConfig.consecutiveFailures = (googleWebAppConfig.consecutiveFailures || 0) + 1;
+                googleWebAppConfig.lastSyncSuccess = false;
+                localStorage.setItem('googleWebAppConfig', JSON.stringify(googleWebAppConfig));
+                
+                updateSyncStatus('❌ Sync Failed', 'red');
+                
+                // Enhanced error handling with specific solutions
+                let errorMessage = '❌ Database sync failed: ' + error.message;
+                let troubleshooting = '';
+                
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    troubleshooting = `
+
+🔧 CONNECTION ISSUE - STEP BY STEP FIX:
+
+**IMMEDIATE ACTION REQUIRED:**
+
+1️⃣ **Redeploy Your Google Apps Script**
+   • Go to script.google.com
+   • Open your project
+   • Click "Deploy" → "Manage deployments"
+   • Click Edit (pencil icon)
+   • Change to "New deployment"
+   • Set "Execute as: Me (your email)"
+   • Set "Who has access: Anyone" ⚠️ CRITICAL
+   • Click "Deploy"
+   • Copy the NEW URL
+
+2️⃣ **Test URL in Browser**
+   • Paste your Web App URL in browser
+   • Must show: "Order Management System Web App is running!"
+   • If error page appears, your script has issues
+
+3️⃣ **Update Connection**
+   • Paste new URL in Settings
+   • Click "Connect" button
+   • Should show "Connection successful!"`;
+                    
+                } else if (error.message.includes('HTML error page')) {
+                    troubleshooting = `
+
+🔧 GOOGLE APPS SCRIPT ERROR:
+
+**YOUR SCRIPT HAS ERRORS:**
+
+1️⃣ **Check Script Errors**
+   • Go to script.google.com
+   • Open your project
+   • Click "Executions" tab (left sidebar)
+   • Look for error messages in red
+
+2️⃣ **Get Latest Script Code**
+   • Click "Get Script" button in Settings
+   • Copy the COMPLETE code
+   • Replace ALL code in your script
+   • Save and redeploy
+
+3️⃣ **Run Script Manually**
+   • Click "Run" button on doGet function
+   • Authorize all permissions
+   • Then redeploy Web App`;
+                    
+                } else if (error.message.includes('Authorization')) {
+                    troubleshooting = `
+
+🔧 AUTHORIZATION ISSUE:
+
+**SCRIPT NEEDS PERMISSIONS:**
+
+1️⃣ **Authorize Script**
+   • Go to script.google.com
+   • Open your project
+   • Click "Run" button on doGet function
+   • Click "Review permissions"
+   • Click "Allow" for all permissions
+
+2️⃣ **Redeploy After Authorization**
+   • Deploy → New deployment
+   • Copy new URL and reconnect`;
+                }
+                
+                // Only show detailed error for manual sync
+                if (!window.isAutoSync) {
+                    showNotification(errorMessage + troubleshooting, 'error', 20000);
+                } else {
+                    console.log('Auto-sync failed:', error.message);
+                    
+                    // If too many consecutive failures, disable auto-sync temporarily
+                    if (googleWebAppConfig.consecutiveFailures >= 5) {
+                        console.log('⚠️ Too many sync failures, temporarily disabling auto-sync');
+                        showNotification('⚠️ Multiple sync failures detected. Please check Google Sheets connection in Settings.', 'error', 6000);
+                    }
+                }
+            }
+        }
+
+        async function processServerData(serverData) {
+            try {
+                let hasUpdates = false;
+                let newOrdersCount = 0;
+                let updatedOrdersCount = 0;
+                let mergedOrdersCount = 0;
+                let conflictsResolved = 0;
+                
+                console.log('📥 Processing server data with ultra-fast sync:', {
+                    serverOrders: serverData.orders?.length || 0,
+                    localOrders: orders.length,
+                    serverCustomers: Object.keys(serverData.customers || {}).length,
+                    localCustomers: Object.keys(customerDatabase).length,
+                    syncTimestamp: new Date().toISOString()
+                });
+                
+                // ULTRA-FAST BIDIRECTIONAL MERGE for orders with millisecond precision
+                if (serverData.orders && Array.isArray(serverData.orders)) {
+                    const serverOrders = serverData.orders;
+                    const allOrderIds = new Set();
+                    
+                    // Collect all unique order IDs from both local and server
+                    orders.forEach(order => allOrderIds.add(order.id));
+                    serverOrders.forEach(order => allOrderIds.add(order.id));
+                    
+                    const mergedOrders = [];
+                    const syncLog = [];
+                    
+                    allOrderIds.forEach(orderId => {
+                        const localOrder = orders.find(o => o.id === orderId);
+                        const serverOrder = serverOrders.find(o => o.id === orderId);
+                        
+                        if (localOrder && serverOrder) {
+                            // Both exist - ULTRA-PRECISE timestamp comparison
+                            const localTime = new Date(localOrder.updatedAt || localOrder.createdAt).getTime();
+                            const serverTime = new Date(serverOrder.updatedAt || serverOrder.createdAt).getTime();
+                            const timeDiff = Math.abs(serverTime - localTime);
+                            
+                            if (serverTime > localTime) {
+                                // Server is newer
+                                mergedOrders.push({
+                                    ...serverOrder,
+                                    syncSource: 'server',
+                                    syncTimestamp: new Date().toISOString(),
+                                    conflictResolved: timeDiff > 1000 ? 'server_newer' : 'server_same'
+                                });
+                                updatedOrdersCount++;
+                                syncLog.push(`📝 Server version: ${orderId} (${timeDiff}ms newer)`);
+                            } else if (localTime > serverTime) {
+                                // Local is newer
+                                mergedOrders.push({
+                                    ...localOrder,
+                                    syncSource: 'local',
+                                    syncTimestamp: new Date().toISOString(),
+                                    conflictResolved: 'local_newer'
+                                });
+                                syncLog.push(`📝 Local version: ${orderId} (${timeDiff}ms newer)`);
+                            } else {
+                                // Same timestamp - prefer local but mark as synced
+                                mergedOrders.push({
+                                    ...localOrder,
+                                    syncSource: 'local',
+                                    syncTimestamp: new Date().toISOString(),
+                                    conflictResolved: 'same_timestamp'
+                                });
+                                syncLog.push(`📝 Same timestamp: ${orderId} (keeping local)`);
+                            }
+                            
+                            if (timeDiff > 1000) conflictsResolved++;
+                            mergedOrdersCount++;
+                            
+                        } else if (localOrder) {
+                            // Only exists locally - keep it and mark for upload
+                            mergedOrders.push({
+                                ...localOrder,
+                                syncSource: 'local',
+                                syncTimestamp: new Date().toISOString(),
+                                needsUpload: true
+                            });
+                            syncLog.push(`📝 Local-only: ${orderId} (will upload to server)`);
+                            
+                        } else if (serverOrder) {
+                            // Only exists on server - add it
+                            mergedOrders.push({
+                                ...serverOrder,
+                                syncSource: 'server',
+                                syncTimestamp: new Date().toISOString(),
+                                downloadedFromServer: true
+                            });
+                            newOrdersCount++;
+                            syncLog.push(`📝 Server-only: ${orderId} (downloaded from server)`);
+                        }
+                    });
+                    
+                    // Update orders array with merged data
+                    orders = mergedOrders;
+                    hasUpdates = true;
+                    
+                    // Sort orders by updatedAt timestamp (newest first) for ultra-fast access
+                    orders.sort((a, b) => {
+                        const timeA = new Date(a.updatedAt || a.createdAt).getTime();
+                        const timeB = new Date(b.updatedAt || b.createdAt).getTime();
+                        return timeB - timeA;
+                    });
+                    
+                    // Log detailed sync information
+                    console.log('🔄 Ultra-fast sync completed:', {
+                        totalOrders: orders.length,
+                        newFromServer: newOrdersCount,
+                        updatedFromServer: updatedOrdersCount,
+                        conflictsResolved: conflictsResolved,
+                        syncDetails: syncLog.slice(0, 10) // Show first 10 for debugging
+                    });
+                }
+                
+                // Enhanced bidirectional merge for customers
+                if (serverData.customers && typeof serverData.customers === 'object') {
+                    const serverCustomers = serverData.customers;
+                    const allMobiles = new Set();
+                    
+                    // Collect all unique mobile numbers
+                    Object.keys(customerDatabase).forEach(mobile => allMobiles.add(mobile));
+                    Object.keys(serverCustomers).forEach(mobile => allMobiles.add(mobile));
+                    
+                    allMobiles.forEach(mobile => {
+                        const localCustomer = customerDatabase[mobile];
+                        const serverCustomer = serverCustomers[mobile];
+                        
+                        if (localCustomer && serverCustomer) {
+                            // Both exist - use the one with latest order date
+                            const localDate = new Date(localCustomer.lastOrderDate || 0);
+                            const serverDate = new Date(serverCustomer.lastOrderDate || 0);
+                            
+                            if (serverDate > localDate) {
+                                customerDatabase[mobile] = serverCustomer;
+                                console.log(`👤 Using server version of customer ${mobile} (newer)`);
+                            } else {
+                                console.log(`👤 Keeping local version of customer ${mobile} (newer or same)`);
+                            }
+                        } else if (serverCustomer) {
+                            // Only exists on server - add it
+                            customerDatabase[mobile] = serverCustomer;
+                            console.log(`👤 Adding server-only customer ${mobile}`);
+                        }
+                        // If only exists locally, keep it (no action needed)
+                    });
+                    
+                    hasUpdates = true;
+                }
+                
+                if (hasUpdates) {
+                    // Save updated data locally
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    localStorage.setItem('customerDatabase', JSON.stringify(customerDatabase));
+                    
+                    // Update UI
+                    updateAllDashboards();
+                    updateSystemInfo();
+                    
+                    console.log('✅ Bidirectional sync completed:', {
+                        totalOrders: orders.length,
+                        newFromServer: newOrdersCount,
+                        updatedFromServer: updatedOrdersCount,
+                        mergedOrders: mergedOrdersCount,
+                        totalCustomers: Object.keys(customerDatabase).length
+                    });
+                    
+                    // Show detailed sync notifications with ultra-fast feedback
+                    if (newOrdersCount > 0 || updatedOrdersCount > 0 || conflictsResolved > 0) {
+                        let message = '⚡ ULTRA-FAST SYNC COMPLETED! ';
+                        let details = [];
+                        
+                        if (newOrdersCount > 0) details.push(`📥 ${newOrdersCount} new orders downloaded`);
+                        if (updatedOrdersCount > 0) details.push(`🔄 ${updatedOrdersCount} orders updated`);
+                        if (conflictsResolved > 0) details.push(`⚖️ ${conflictsResolved} conflicts resolved`);
+                        
+                        message += details.join(', ');
+                        message += `\n📊 Total: ${orders.length} orders | Latest data across all devices!`;
+                        
+                        showNotification(message, 'success', 6000);
+                        
+                        // Show real-time sync status
+                        updateSyncStatus(`✅ Synced (${new Date().toLocaleTimeString()})`, 'green');
+                        
+                    } else {
+                        console.log('📊 All data is already in perfect sync - no changes needed');
+                        
+                        // Show "already synced" notification for manual sync only
+                        if (!window.isAutoSync) {
+                            showNotification('✅ Perfect sync! All devices already have the latest data.', 'info', 3000);
+                        }
+                    }
+                } else {
+                    console.log('📊 No server data to process or data already in sync');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error processing server data:', error);
+                showNotification('⚠️ Error processing sync data. Local data preserved.', 'error', 4000);
+            }
+        }
+
+        function showGoogleScriptCode() {
+            const scriptCode = `
+// Google Apps Script Code for Order Management System - FIXED VERSION
+// Deploy this as a Web App with "Execute as: Me" and "Who has access: Anyone"
+
+// Handle GET requests (required for Web App)
+function doGet(e) {
+  try {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: 'Order Management System Web App is running!',
+      timestamp: new Date().toISOString(),
+      version: '1.0',
+      endpoints: {
+        test: 'POST with action: test',
+        sync: 'POST with action: sync'
+      }
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle POST requests (for data operations) - FIXED VERSION
+function doPost(e) {
+  try {
+    let data;
+    
+    // FIXED: Handle both JSON and FormData formats
+    if (e.postData && e.postData.contents) {
+      // Try JSON format first
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch (jsonError) {
+        // If JSON fails, it might be FormData - check parameters
+        if (e.parameter && e.parameter.payload) {
+          data = JSON.parse(e.parameter.payload);
+        } else {
+          return ContentService.createTextOutput(JSON.stringify({
+            success: false,
+            error: 'No valid data received. Send JSON or FormData with payload parameter.'
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    } else if (e.parameter && e.parameter.payload) {
+      // Handle FormData format
+      data = JSON.parse(e.parameter.payload);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'No data received. Please send POST request with JSON data or FormData.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const action = data.action;
+    const password = data.password || '';
+    
+    // Optional: Add password protection
+    const WEBAPP_PASSWORD = ''; // Set your password here if needed (leave empty for no password)
+    if (WEBAPP_PASSWORD && password !== WEBAPP_PASSWORD) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'Invalid password'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get or create spreadsheet
+    let spreadsheet;
+    try {
+      spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    } catch (error) {
+      // If no active spreadsheet, create a new one
+      spreadsheet = SpreadsheetApp.create('Order Management Database');
+      Logger.log('Created new spreadsheet: ' + spreadsheet.getUrl());
+    }
+    
+    if (action === 'test') {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Connection successful! Google Apps Script is working with both JSON and FormData.',
+        timestamp: new Date().toISOString(),
+        spreadsheetId: spreadsheet.getId(),
+        spreadsheetUrl: spreadsheet.getUrl(),
+        dataFormat: e.parameter && e.parameter.payload ? 'FormData' : 'JSON'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (action === 'sync') {
+      const result = handleSync(spreadsheet, data.data);
+      return ContentService.createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: 'Unknown action: ' + action + '. Supported actions: test, sync'
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    Logger.log('Error in doPost: ' + error.toString());
+    Logger.log('Request details: ' + JSON.stringify({
+      postData: e.postData ? 'present' : 'missing',
+      parameters: e.parameter ? Object.keys(e.parameter) : 'none'
+    }));
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: 'Server error: ' + error.toString(),
+      timestamp: new Date().toISOString(),
+      debug: {
+        hasPostData: !!e.postData,
+        hasParameters: !!e.parameter,
+        parameterKeys: e.parameter ? Object.keys(e.parameter) : []
+      }
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function handleSync(spreadsheet, clientData) {
+  try {
+    // Get or create sheets
+    const ordersSheet = getOrCreateSheet(spreadsheet, 'Orders', [
+      'Order ID', 'Customer Name', 'Mobile', 'Email', 'Address', 
+      'Product', 'Quantity', 'Unit Price', 'Total Amount', 'Status', 
+      'Created At', 'Updated At'
+    ]);
+    
+    const customersSheet = getOrCreateSheet(spreadsheet, 'Customers', [
+      'Mobile', 'Name', 'Email', 'Address', 'Last Order Date'
+    ]);
+    
+    // Sync orders
+    if (clientData.orders) {
+      syncOrders(ordersSheet, clientData.orders);
+    }
+    
+    // Sync customers
+    if (clientData.customers) {
+      syncCustomers(customersSheet, clientData.customers);
+    }
+    
+    // Read current data from sheets
+    const serverData = {
+      orders: readOrdersFromSheet(ordersSheet),
+      customers: readCustomersFromSheet(customersSheet)
+    };
+    
+    return {
+      success: true,
+      message: 'Sync completed successfully',
+      timestamp: new Date().toISOString(),
+      data: serverData
+    };
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+function getOrCreateSheet(spreadsheet, sheetName, headers) {
+  let sheet = spreadsheet.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+    if (headers && headers.length > 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    }
+  }
+  
+  return sheet;
+}
+
+function syncOrders(sheet, orders) {
+  // FIXED: Enhanced sync that preserves existing data and merges properly
+  const existingOrders = readOrdersFromSheet(sheet);
+  const allOrderIds = new Set();
+  
+  // Collect all unique order IDs
+  orders.forEach(order => allOrderIds.add(order.id));
+  existingOrders.forEach(order => allOrderIds.add(order.id));
+  
+  const mergedOrders = [];
+  
+  // Merge orders intelligently
+  allOrderIds.forEach(orderId => {
+    const clientOrder = orders.find(o => o.id === orderId);
+    const existingOrder = existingOrders.find(o => o.id === orderId);
+    
+    if (clientOrder && existingOrder) {
+      // Both exist - use the newer one
+      const clientTime = new Date(clientOrder.updatedAt || clientOrder.createdAt);
+      const existingTime = new Date(existingOrder.updatedAt || existingOrder.createdAt);
+      
+      if (clientTime >= existingTime) {
+        mergedOrders.push(clientOrder);
+        Logger.log('Using client version of order: ' + orderId + ' (newer or same)');
+      } else {
+        mergedOrders.push(existingOrder);
+        Logger.log('Keeping existing version of order: ' + orderId + ' (newer)');
+      }
+    } else if (clientOrder) {
+      // Only exists in client data - add it
+      mergedOrders.push(clientOrder);
+      Logger.log('Adding new order from client: ' + orderId);
+    } else if (existingOrder) {
+      // Only exists in sheet - keep it
+      mergedOrders.push(existingOrder);
+      Logger.log('Preserving existing order: ' + orderId);
+    }
+  });
+  
+  // Clear existing data (except headers)
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clear();
+  }
+  
+  // Add merged data
+  if (mergedOrders.length > 0) {
+    const orderData = mergedOrders.map(order => [
+      order.id,
+      order.customerName,
+      order.customerMobile,
+      order.customerEmail || '',
+      order.customerAddress || '',
+      order.productName,
+      order.quantity,
+      order.unitPrice,
+      order.totalAmount,
+      order.status,
+      order.createdAt,
+      order.updatedAt
+    ]);
+    
+    sheet.getRange(2, 1, orderData.length, orderData[0].length).setValues(orderData);
+    Logger.log('Synced ' + mergedOrders.length + ' orders to sheet');
+  }
+}
+
+function syncCustomers(sheet, customers) {
+  // FIXED: Enhanced customer sync that preserves existing data
+  const existingCustomers = readCustomersFromSheet(sheet);
+  const allMobiles = new Set();
+  
+  // Collect all unique mobile numbers
+  Object.keys(customers).forEach(mobile => allMobiles.add(mobile));
+  Object.keys(existingCustomers).forEach(mobile => allMobiles.add(mobile));
+  
+  const mergedCustomers = {};
+  
+  // Merge customers intelligently
+  allMobiles.forEach(mobile => {
+    const clientCustomer = customers[mobile];
+    const existingCustomer = existingCustomers[mobile];
+    
+    if (clientCustomer && existingCustomer) {
+      // Both exist - use the one with latest order date
+      const clientDate = new Date(clientCustomer.lastOrderDate || 0);
+      const existingDate = new Date(existingCustomer.lastOrderDate || 0);
+      
+      if (clientDate >= existingDate) {
+        mergedCustomers[mobile] = clientCustomer;
+        Logger.log('Using client version of customer: ' + mobile + ' (newer or same)');
+      } else {
+        mergedCustomers[mobile] = existingCustomer;
+        Logger.log('Keeping existing version of customer: ' + mobile + ' (newer)');
+      }
+    } else if (clientCustomer) {
+      // Only exists in client data - add it
+      mergedCustomers[mobile] = clientCustomer;
+      Logger.log('Adding new customer from client: ' + mobile);
+    } else if (existingCustomer) {
+      // Only exists in sheet - keep it
+      mergedCustomers[mobile] = existingCustomer;
+      Logger.log('Preserving existing customer: ' + mobile);
+    }
+  });
+  
+  // Clear existing data (except headers)
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clear();
+  }
+  
+  // Add merged data
+  const customerData = Object.entries(mergedCustomers).map(([mobile, customer]) => [
+    mobile,
+    customer.name,
+    customer.email || '',
+    customer.address || '',
+    customer.lastOrderDate
+  ]);
+  
+  if (customerData.length > 0) {
+    sheet.getRange(2, 1, customerData.length, customerData[0].length).setValues(customerData);
+    Logger.log('Synced ' + customerData.length + ' customers to sheet');
+  }
+}
+
+function readOrdersFromSheet(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  
+  const data = sheet.getRange(2, 1, lastRow - 1, 12).getValues();
+  
+  return data.map(row => ({
+    id: row[0],
+    customerName: row[1],
+    customerMobile: row[2],
+    customerEmail: row[3],
+    customerAddress: row[4],
+    productName: row[5],
+    quantity: row[6],
+    unitPrice: row[7],
+    totalAmount: row[8],
+    status: row[9],
+    createdAt: row[10],
+    updatedAt: row[11]
+  }));
+}
+
+function readCustomersFromSheet(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return {};
+  
+  const data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  const customers = {};
+  
+  data.forEach(row => {
+    customers[row[0]] = {
+      name: row[1],
+      email: row[2],
+      address: row[3],
+      lastOrderDate: row[4]
+    };
+  });
+  
+  return customers;
+}
+`;
+
+            // Create modal to show script code
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-advanced z-50';
+            modal.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="modal-content-advanced max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">📝 Google Apps Script Code</h3>
+                                    <p class="text-gray-600 text-sm">Copy this code to your Google Apps Script project</p>
+                                </div>
+                                <button onclick="this.closest('.modal-advanced').remove()" class="text-gray-400 hover:text-gray-600 text-xl">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
+                                <h4 class="font-semibold text-red-900 mb-2">🚨 IMPORTANT - Common Issues Fixed:</h4>
+                                <div class="text-sm text-red-800 space-y-1">
+                                    <p><strong>❌ "Script function not found: doGet"</strong> - Fixed! Added doGet function</p>
+                                    <p><strong>❌ "Failed to connect"</strong> - Fixed! Better error handling added</p>
+                                    <p><strong>⚠️ Make sure to follow ALL steps below exactly!</strong></p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">📋 Step-by-Step Setup Instructions:</h4>
+                                <ol class="text-sm text-gray-700 space-y-2">
+                                    <li><strong>1️⃣</strong> Go to <a href="https://script.google.com" target="_blank" class="text-blue-600 hover:underline font-semibold">script.google.com</a></li>
+                                    <li><strong>2️⃣</strong> Click "New Project" (+ button)</li>
+                                    <li><strong>3️⃣</strong> Delete ALL existing code and paste the COMPLETE code below</li>
+                                    <li><strong>4️⃣</strong> Click "Save" (Ctrl+S) and give it a name like "Order Management"</li>
+                                    <li><strong>5️⃣</strong> Click "Deploy" → "New deployment" (top right)</li>
+                                    <li><strong>6️⃣</strong> Click gear icon ⚙️ next to "Select type"</li>
+                                    <li><strong>7️⃣</strong> Choose "Web app" from dropdown</li>
+                                    <li><strong>8️⃣</strong> Set "Execute as: Me" (YOUR EMAIL)</li>
+                                    <li><strong>9️⃣</strong> Set "Who has access: Anyone" (IMPORTANT!)</li>
+                                    <li><strong>🔟</strong> Click "Deploy" and authorize permissions</li>
+                                    <li><strong>1️⃣1️⃣</strong> Copy the Web App URL (ends with /exec)</li>
+                                    <li><strong>1️⃣2️⃣</strong> Paste URL above and click "Connect"</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="bg-green-50 border border-green-200 p-4 rounded-lg mb-4">
+                                <h4 class="font-semibold text-green-900 mb-2">✅ Testing Your Setup:</h4>
+                                <div class="text-sm text-green-800 space-y-1">
+                                    <p>• After deployment, visit your Web App URL in browser</p>
+                                    <p>• You should see: "Order Management System Web App is running!"</p>
+                                    <p>• If you see this message, your setup is correct!</p>
+                                </div>
+                            </div>
+                            
+                            <div class="relative">
+                                <button onclick="copyScriptCode()" class="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm z-10">
+                                    📋 Copy Code
+                                </button>
+                                <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm" style="max-height: 400px;"><code id="script-code">${scriptCode.trim()}</code></pre>
+                            </div>
+                            
+                            <div class="mt-4 text-center">
+                                <button onclick="this.closest('.modal-advanced').remove()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function copyScriptCode() {
+            const codeElement = document.getElementById('script-code');
+            const textArea = document.createElement('textarea');
+            textArea.value = codeElement.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            showNotification('📋 Google Apps Script code copied to clipboard!', 'success', 3000);
+        }
+
+        // Test Web App URL function
+        async function testWebAppURL() {
+            const webAppUrl = document.getElementById('google-webapp-url').value.trim();
+            
+            if (!webAppUrl) {
+                showNotification('❌ Please enter Web App URL first', 'error', 3000);
+                return;
+            }
+            
+            showNotification('🔧 Testing Web App URL... Please wait', 'info', 2000);
+            
+            try {
+                // Test 1: Basic URL validation
+                if (!webAppUrl.includes('script.google.com/macros/s/') || !webAppUrl.includes('/exec')) {
+                    throw new Error('Invalid URL format. Must be Google Apps Script Web App URL ending with /exec');
+                }
+                
+                // Test 2: Try GET request to check if Web App responds
+                const getResponse = await fetch(webAppUrl, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (getResponse.ok) {
+                    const result = await getResponse.json();
+                    
+                    if (result.success && result.message) {
+                        showNotification(`✅ Web App URL is working!\n\n📋 Response: ${result.message}\n🕒 Timestamp: ${new Date(result.timestamp).toLocaleString()}`, 'success', 8000);
+                    } else {
+                        showNotification('⚠️ Web App responds but may have issues. Try connecting anyway.', 'info', 5000);
+                    }
+                } else {
+                    throw new Error(`Web App returned HTTP ${getResponse.status}: ${getResponse.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('URL test error:', error);
+                
+                let errorMsg = `❌ Web App URL Test Failed: ${error.message}\n\n`;
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg += `🔧 TROUBLESHOOTING STEPS:
+
+1️⃣ **Check URL Format**
+   ✓ Should look like: https://script.google.com/macros/s/YOUR_ID/exec
+   ✓ Must end with /exec
+
+2️⃣ **Verify Deployment**
+   • Go to script.google.com
+   • Open your project
+   • Click Deploy → Manage deployments
+   • Make sure status is "Active"
+
+3️⃣ **Check Access Settings**
+   • Click Edit (pencil icon) on deployment
+   • Set "Who has access: Anyone"
+   • Click Deploy
+
+4️⃣ **Test in Browser**
+   • Copy your Web App URL
+   • Paste in new browser tab
+   • Should show success message
+
+5️⃣ **Common Issues**
+   • URL copied incorrectly
+   • Web App not deployed
+   • Access restricted to specific users
+   • Script has errors`;
+                    
+                } else if (error.message.includes('Invalid URL')) {
+                    errorMsg += '🔧 Please check your Web App URL format. It should end with /exec';
+                }
+                
+                showNotification(errorMsg, 'error', 15000);
+            }
+        }
+
+        function startAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+            
+            // Use ultra-fast intervals based on sync mode
+            const interval = googleWebAppConfig.realtimeSyncEnabled ? 
+                googleWebAppConfig.syncInterval : // 3 seconds for real-time
+                googleWebAppConfig.normalSyncInterval; // 50 seconds for normal
+            
+            syncInterval = setInterval(() => {
+                if (googleWebAppConfig.isConnected && document.getElementById('auto-sync-enabled')?.checked) {
+                    // Check if there are pending changes to sync
+                    const lastModified = localStorage.getItem('lastDataModification');
+                    const lastSync = googleWebAppConfig.lastSyncTime;
+                    
+                    if (!lastSync || (lastModified && new Date(lastModified) > new Date(lastSync))) {
+                        console.log('🔄 Auto-sync triggered - changes detected');
+                        window.isAutoSync = true;
+                        syncWithGoogleWebApp();
+                        window.isAutoSync = false;
+                    } else {
+                        // Still sync periodically to check for server changes
+                        if (Math.random() < 0.3) { // 30% chance to check server
+                            console.log('🔍 Periodic server check');
+                            window.isAutoSync = true;
+                            syncWithGoogleWebApp();
+                            window.isAutoSync = false;
+                        }
+                    }
+                }
+            }, interval);
+            
+            const syncType = googleWebAppConfig.realtimeSyncEnabled ? 
+                'ULTRA-FAST real-time (3s)' : 'auto (10s)';
+            console.log(`🔄 ${syncType} sync started with ${interval}ms interval`);
+            
+            // Only show notification for manual activation
+            if (!window.isInitializing) {
+                showNotification(`⚡ ${syncType} sync activated! Latest data syncs instantly across all devices.`, 'success', 4000);
+            }
+        }
+
+        function stopAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+            }
+        }
+
+        function updateSyncStatus(status, color) {
+            const statusEl = document.getElementById('sync-status');
+            if (statusEl) {
+                statusEl.textContent = status;
+                statusEl.className = `text-xs font-medium text-${color}-600`;
+            }
+        }
+
+        function updateLastSyncTime() {
+            const timeEl = document.getElementById('last-sync-time');
+            if (timeEl && googleWebAppConfig.lastSyncTime) {
+                timeEl.textContent = getTimeAgo(new Date(googleWebAppConfig.lastSyncTime));
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ Are you sure you want to clear all data? This action cannot be undone!')) {
+                orders = [];
+                customerDatabase = {};
+                localStorage.clear();
+                
+                updateAllDashboards();
+                updateSystemInfo();
+                
+                showNotification('🗑️ All data cleared successfully!', 'success', 3000);
+            }
+        }
+
+        // Get time ago helper function
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        }
+
+        // Block problematic CDN requests that cause F12 errors
+        function blockProblematicRequests() {
+            // Block cdn-cgi requests that cause ERR_FILE_NOT_FOUND
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const url = args[0];
+                if (typeof url === 'string' && url.includes('cdn-cgi')) {
+                    console.log('🚫 Blocked problematic CDN request:', url);
+                    return Promise.reject(new Error('Blocked cdn-cgi request'));
+                }
+                return originalFetch.apply(this, args);
+            };
+            
+            // Block problematic script loading
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.tagName === 'SCRIPT' && node.src && node.src.includes('cdn-cgi')) {
+                            console.log('🚫 Blocked problematic script:', node.src);
+                            node.remove();
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.head, { childList: true, subtree: true });
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            console.log('🛡️ CDN blocking protection activated');
+        }
+
+        // Enhanced device information for better sync detection
+        function getDeviceInfo() {
+            return {
+                userAgent: navigator.userAgent.substring(0, 50) + '...',
+                language: navigator.language,
+                platform: navigator.platform,
+                screenResolution: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        // Generate device fingerprint for cross-device sync detection
+        function getDeviceFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillText('Device fingerprint', 2, 2);
+                
+                const fingerprint = [
+                    navigator.userAgent,
+                    navigator.language,
+                    navigator.platform,
+                    screen.width + 'x' + screen.height,
+                    new Date().getTimezoneOffset(),
+                    Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    canvas.toDataURL()
+                ].join('|');
+                
+                // Create a simple hash
+                let hash = 0;
+                for (let i = 0; i < fingerprint.length; i++) {
+                    const char = fingerprint.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                
+                return Math.abs(hash).toString(36);
+            } catch (error) {
+                console.log('Fingerprint generation error:', error);
+                // Fallback fingerprint
+                return (navigator.userAgent + screen.width + screen.height).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+            }
+        }
+
+        // QR Scanner Functions
+        function toggleQRScanner() {
+            const scannerSection = document.getElementById('qr-scanner-section');
+            const toggleBtn = document.getElementById('scanner-toggle-btn');
+            
+            if (scannerSection.classList.contains('hidden')) {
+                scannerSection.classList.remove('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-times mr-2"></i>❌ Close Scanner';
+                toggleBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                toggleBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                initializeCamera();
+            } else {
+                scannerSection.classList.add('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-qrcode mr-2"></i>📱 Start QR Scanner';
+                toggleBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                toggleBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                stopScanning();
+                stopCamera();
+            }
+        }
+
+        async function initializeCamera() {
+            try {
+                const video = document.getElementById('qr-video');
+                const statusEl = document.getElementById('scanner-status');
+                
+                statusEl.textContent = '📡 Requesting camera access...';
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment', // Use back camera if available
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+                
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = videoStream;
+                
+                video.onloadedmetadata = () => {
+                    statusEl.textContent = '📷 Camera ready - Click Start Scanning';
+                    showNotification('📷 Camera initialized successfully! Ready to scan QR codes.', 'success', 3000);
+                };
+                
+            } catch (error) {
+                console.error('Camera initialization error:', error);
+                document.getElementById('scanner-status').textContent = '❌ Camera access denied';
+                showNotification('❌ Camera access required for QR scanning. Please allow camera permission.', 'error', 5000);
+            }
+        }
+
+        function startScanning() {
+            if (isScanning) return;
+            
+            const video = document.getElementById('qr-video');
+            const statusEl = document.getElementById('scanner-status');
+            
+            if (!videoStream) {
+                showNotification('❌ Camera not initialized. Please allow camera access.', 'error', 3000);
+                return;
+            }
+            
+            isScanning = true;
+            statusEl.textContent = '🔍 Scanning for QR codes...';
+            
+            // Start QR code detection
+            scanQRCode();
+            
+            showNotification('🔍 QR Scanner started! Point camera at gate pass QR code.', 'info', 3000);
+        }
+
+        function stopScanning() {
+            isScanning = false;
+            document.getElementById('scanner-status').textContent = '⏹️ Scanning stopped';
+            showNotification('⏹️ QR Scanner stopped.', 'info', 2000);
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            const video = document.getElementById('qr-video');
+            video.srcObject = null;
+            
+            document.getElementById('scanner-status').textContent = '📡 Camera disconnected';
+        }
+
+        function scanQRCode() {
+            if (!isScanning) return;
+            
+            const video = document.getElementById('qr-video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                try {
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const qrCode = detectQRCode(imageData);
+                    
+                    if (qrCode) {
+                        processQRCode(qrCode);
+                        return;
+                    }
+                } catch (error) {
+                    console.log('QR detection error:', error);
+                }
+            }
+            
+            // Continue scanning
+            setTimeout(scanQRCode, 100);
+        }
+
+        function detectQRCode(imageData) {
+            // Simple QR code detection using pattern matching
+            // This is a basic implementation - in production, use a proper QR library
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            // Look for QR code patterns (simplified detection)
+            // In a real implementation, you'd use jsQR or similar library
+            
+            // For demo purposes, we'll simulate QR detection
+            // This would normally use a proper QR code detection library
+            return null; // Placeholder - would return decoded QR data
+        }
+
+        function processQRCode(qrData) {
+            try {
+                // Parse QR code data
+                let orderData;
+                
+                if (qrData.startsWith('ORDER:')) {
+                    // Parse our custom QR format
+                    const parts = qrData.split('|');
+                    orderData = {};
+                    
+                    parts.forEach(part => {
+                        const [key, value] = part.split(':');
+                        orderData[key] = value;
+                    });
+                } else {
+                    // Try to parse as JSON or other format
+                    orderData = JSON.parse(qrData);
+                }
+                
+                const orderId = orderData.ORDER || orderData.orderId;
+                
+                if (orderId) {
+                    markOrderAsDelivered(orderId, qrData);
+                } else {
+                    showScanResult('❌ Invalid QR Code', 'QR code does not contain valid order information', 'error');
+                }
+                
+            } catch (error) {
+                console.error('QR processing error:', error);
+                showScanResult('❌ QR Code Error', 'Unable to process QR code data', 'error');
+            }
+        }
+
+        function markOrderAsDelivered(orderId, qrData) {
+            const order = orders.find(o => o.id === orderId);
+            
+            if (!order) {
+                showScanResult('❌ Order Not Found', `Order ${orderId} not found in system`, 'error');
+                return;
+            }
+            
+            if (order.status === 'delivered') {
+                showScanResult('ℹ️ Already Delivered', `Order ${orderId} is already marked as delivered`, 'info');
+                return;
+            }
+            
+            if (order.status !== 'dispatched') {
+                showScanResult('⚠️ Invalid Status', `Order ${orderId} is not in dispatched status (Current: ${order.status})`, 'error');
+                return;
+            }
+            
+            // Mark as delivered
+            const oldStatus = order.status;
+            order.status = 'delivered';
+            order.updatedAt = new Date().toISOString();
+            order.deliveredAt = new Date().toISOString();
+            order.deliveryMethod = 'QR_SCAN';
+            
+            if (!order.statusHistory) order.statusHistory = [];
+            order.statusHistory.push({
+                status: 'delivered',
+                timestamp: new Date().toISOString(),
+                previousStatus: oldStatus,
+                method: 'QR_SCAN'
+            });
+            
+            // Add to recent deliveries
+            recentDeliveries.unshift({
+                orderId: orderId,
+                customerName: order.customerName,
+                productName: order.productName,
+                amount: order.totalAmount,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Keep only last 10 deliveries
+            if (recentDeliveries.length > 10) {
+                recentDeliveries = recentDeliveries.slice(0, 10);
+            }
+            
+            saveData();
+            updateAllDashboards();
+            updateSystemInfo();
+            updateRecentDeliveries();
+            
+            showScanResult(
+                '✅ Delivery Confirmed!', 
+                `Order ${orderId} successfully marked as delivered\nCustomer: ${order.customerName}\nProduct: ${order.productName}\nAmount: ₹${order.totalAmount.toLocaleString()}`, 
+                'success'
+            );
+            
+            showNotification(`🎉 Order ${orderId} delivered successfully via QR scan!`, 'success', 4000);
+            
+            // Auto-stop scanning after successful delivery
+            setTimeout(() => {
+                stopScanning();
+            }, 2000);
+        }
+
+        function showScanResult(title, message, type) {
+            const resultEl = document.getElementById('scan-result');
+            const iconMap = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️'
+            };
+            
+            const colorMap = {
+                success: 'border-green-500 bg-green-50',
+                error: 'border-red-500 bg-red-50',
+                info: 'border-blue-500 bg-blue-50'
+            };
+            
+            resultEl.className = `bg-white border-2 p-4 rounded-lg ${colorMap[type]}`;
+            resultEl.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="text-2xl">${iconMap[type]}</div>
+                    <div class="flex-1">
+                        <h5 class="font-semibold text-gray-900 mb-1">${title}</h5>
+                        <p class="text-sm text-gray-700 whitespace-pre-line">${message}</p>
+                        <p class="text-xs text-gray-500 mt-2">${new Date().toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateRecentDeliveries() {
+            const deliveriesEl = document.getElementById('recent-deliveries');
+            
+            if (recentDeliveries.length === 0) {
+                deliveriesEl.innerHTML = '<p class="text-gray-600">No recent deliveries via QR scan</p>';
+                return;
+            }
+            
+            deliveriesEl.innerHTML = recentDeliveries.slice(0, 5).map(delivery => `
+                <div class="flex justify-between items-center py-1 border-b border-green-200 last:border-b-0">
+                    <div>
+                        <span class="font-medium">${delivery.orderId}</span>
+                        <span class="text-xs text-gray-600">- ${delivery.customerName}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-gray-600">₹${delivery.amount.toLocaleString()}</div>
+                        <div class="text-xs text-gray-500">${getTimeAgo(new Date(delivery.timestamp))}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Manual QR Input (for testing without camera)
+        function simulateQRScan() {
+            const testOrderId = prompt('🧪 Test QR Scanner\n\nEnter Order ID to simulate QR scan:');
+            
+            if (testOrderId) {
+                const qrData = `ORDER:${testOrderId}|CUSTOMER:Test Customer|MOBILE:9876543210|PRODUCT:Test Product|QTY:1|AMT:1000`;
+                processQRCode(qrData);
+            }
+        }
+
+        // Add test button for QR scanning (for development)
+        function addTestQRButton() {
+            const scannerSection = document.getElementById('qr-scanner-section');
+            if (scannerSection && !document.getElementById('test-qr-btn')) {
+                const testBtn = document.createElement('button');
+                testBtn.id = 'test-qr-btn';
+                testBtn.className = 'bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm';
+                testBtn.innerHTML = '<i class="fas fa-flask mr-2"></i>🧪 Test QR Scan';
+                testBtn.onclick = simulateQRScan;
+                
+                const buttonContainer = scannerSection.querySelector('.flex.justify-center.space-x-2');
+                if (buttonContainer) {
+                    buttonContainer.appendChild(testBtn);
+                }
+            }
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97cea62305b754d4',t:'MTc1NzUwNDQxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
