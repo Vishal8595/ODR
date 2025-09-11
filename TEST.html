@@ -967,6 +967,7 @@
     <script>
         // Global variables
         let orders = [];
+        let filteredOrders = [];
         let appSettings = {
             businessName: 'My Business',
             businessPhone: '+91 9876543210',
@@ -1856,30 +1857,6 @@
             } else {
                 showNotification(`✅ Order ${orderId} status updated to ${newStatus}`, 'success', 3000);
             }
-        }
-
-        // Filter orders
-        function filterOrders() {
-            const searchTerm = document.getElementById('search-orders').value.toLowerCase();
-            const statusFilter = document.getElementById('filter-status').value;
-            
-            let filteredOrders = orders;
-            
-            if (searchTerm) {
-                filteredOrders = filteredOrders.filter(order => 
-                    order.id.toLowerCase().includes(searchTerm) ||
-                    order.customerName.toLowerCase().includes(searchTerm) ||
-                    order.customerMobile.includes(searchTerm) ||
-                    order.productName.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            if (statusFilter) {
-                filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
-            }
-            
-            updateOrdersGrid('orders-grid', filteredOrders, 'all-orders');
-            document.getElementById('orders-count').textContent = `Showing: ${filteredOrders.length} of ${orders.length} orders`;
         }
 
         // Filter by status
