@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Order Management System - ULTRA Working</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <script>
         // Suppress Tailwind production warning
         if (typeof console !== 'undefined' && console.warn) {
@@ -463,7 +465,12 @@
                     <h3 class="text-lg font-semibold text-gray-900">
                         <i class="fas fa-filter mr-2 text-blue-600"></i>Search & Filter
                     </h3>
-                    <span class="text-sm text-gray-600" id="orders-count">Total: 0 orders</span>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm text-gray-600" id="orders-count">Total: 0 orders</span>
+                        <button onclick="printFilteredOrders()" title="Print Filtered Orders" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -1239,7 +1246,313 @@
                 updateRecentDeliveries();
             }, 100);
         }
+        // Filter orders function
+        function filterOrders() {
+            const searchTerm = document.getElementById('search-orders')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('filter-status')?.value || '';
+            
+            let filtered = [...orders];
+            
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(order => 
+                    order.id.toLowerCase().includes(searchTerm) ||
+                    order.customerName.toLowerCase().includes(searchTerm) ||
+                    order.customerMobile.includes(searchTerm) ||
+                    order.productName.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply status filter
+            if (statusFilter) {
+                filtered = filtered.filter(order => order.status === statusFilter);
+            }
+            
+            filteredOrders = filtered;
+            updateOrdersGrid('orders-grid', filtered, 'all-orders');
+            
+            const ordersCountEl = document.getElementById('orders-count');
+            if (ordersCountEl) {
+                ordersCountEl.textContent = `Showing: ${filtered.length} of ${orders.length} orders`;
+            }
+        }
 
+        // Clear all filters
+        function clearAllFilters() {
+            const searchEl = document.getElementById('search-orders');
+            const statusEl = document.getElementById('filter-status');
+            
+            if (searchEl) searchEl.value = '';
+            if (statusEl) statusEl.value = '';
+            
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelector('.status-filter-btn').classList.add('active');
+            
+            filterOrders();
+        }
+
+
+
+        // Print all orders function
+        function printAllOrders() {
+            document.getElementById('print-dropdown').classList.add('hidden');
+            
+            if (orders.length === 0) {
+                showNotification('❌ No orders to print!', 'error', 3000);
+                return;
+            }
+            
+            generateOrdersReport(orders, 'All Orders Report', 'Complete list of all orders');
+            showNotification(`🖨️ All orders report generated! ${orders.length} orders ready to print.`, 'success', 4000);
+        }
+
+        // Print status wise orders
+        function printStatusWise(status) {
+            document.getElementById('print-dropdown').classList.add('hidden');
+            
+            const statusOrders = orders.filter(order => order.status === status);
+            
+            if (statusOrders.length === 0) {
+                showNotification(`❌ No ${status} orders to print!`, 'error', 3000);
+                return;
+            }
+            
+            const statusNames = {
+                processing: 'Processing Orders',
+                ready: 'Ready Orders', 
+                dispatched: 'Dispatched Orders',
+                delivered: 'Delivered Orders',
+                cancelled: 'Cancelled Orders'
+            };
+            
+            const statusIcons = {
+                processing: '⚙️',
+                ready: '✅',
+                dispatched: '🚚', 
+                delivered: '🎉',
+                cancelled: '❌'
+            };
+            
+            generateOrdersReport(
+                statusOrders, 
+                `${statusIcons[status]} ${statusNames[status]} Report`,
+                `All orders with ${status} status`
+            );
+            
+            showNotification(`🖨️ ${statusNames[status]} report generated! ${statusOrders.length} orders ready to print.`, 'success', 4000);
+        }
+
+        // Generate orders report (unified function)
+        function generateOrdersReport(ordersToprint, reportTitle, reportDescription) {
+            const summary = calculateOrderStats(ordersToprint);
+            
+            const printHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${reportTitle} - ${appSettings.businessName}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 20px; 
+                            font-size: 12px;
+                            line-height: 1.4;
+                        }
+                        .header { 
+                            text-align: center; 
+                            margin-bottom: 30px; 
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 20px;
+                        }
+                        .business-name { 
+                            font-size: 24px; 
+                            font-weight: bold; 
+                            margin-bottom: 5px;
+                        }
+                        .business-details { 
+                            font-size: 14px; 
+                            color: #666; 
+                        }
+                        .report-title { 
+                            font-size: 20px; 
+                            font-weight: bold; 
+                            margin: 20px 0 10px 0;
+                            color: #2563eb;
+                        }
+                        .report-description {
+                            font-size: 14px;
+                            color: #666;
+                            margin-bottom: 10px;
+                        }
+                        table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            margin-top: 20px;
+                        }
+                        th, td { 
+                            border: 1px solid #ddd; 
+                            padding: 8px; 
+                            text-align: left;
+                        }
+                        th { 
+                            background-color: #f2f2f2; 
+                            font-weight: bold;
+                        }
+                        .footer { 
+                            margin-top: 30px; 
+                            text-align: center; 
+                            font-size: 10px; 
+                            color: #666;
+                            border-top: 1px solid #ddd;
+                            padding-top: 15px;
+                        }
+                        .summary-box {
+                            background: #f8f9fa;
+                            border: 1px solid #dee2e6;
+                            border-radius: 8px;
+                            padding: 15px;
+                            margin-bottom: 20px;
+                        }
+                        .status-processing { color: #1e40af; }
+                        .status-ready { color: #059669; }
+                        .status-dispatched { color: #7c3aed; }
+                        .status-delivered { color: #10b981; }
+                        .status-cancelled { color: #dc2626; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="business-name">${appSettings.businessName}</div>
+                        <div class="business-details">
+                            📞 ${appSettings.businessPhone} | 📧 ${appSettings.businessEmail}<br>
+                            📍 ${appSettings.businessAddress}
+                        </div>
+                        <div class="report-title">📋 ${reportTitle}</div>
+                        <div class="report-description">${reportDescription}</div>
+                    </div>
+                    
+                    <div class="summary-box">
+                        <div><strong>📅 Generated:</strong> ${new Date().toLocaleString()}</div>
+                        <div><strong>📊 Total Orders:</strong> ${ordersToprint.length} orders</div>
+                        <div><strong>💰 Total Revenue:</strong> ₹${summary.revenue.toLocaleString()}</div>
+                        <div><strong>📈 Status Breakdown:</strong> 
+                            Processing: ${summary.processing}, 
+                            Ready: ${summary.ready}, 
+                            Dispatched: ${summary.dispatched}, 
+                            Delivered: ${summary.delivered},
+                            Cancelled: ${summary.cancelled}
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Mobile</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ordersToprint.map(order => `
+                                <tr>
+                                    <td>${order.id}</td>
+                                    <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                                    <td>${order.customerName}</td>
+                                    <td>${order.customerMobile}</td>
+                                    <td>${order.productName}</td>
+                                    <td>${order.quantity}</td>
+                                    <td>₹${order.totalAmount.toLocaleString()}</td>
+                                    <td class="status-${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="footer">
+                        <div><strong>${appSettings.businessName}</strong> - Order Management System</div>
+                        <div>${reportTitle} generated on ${new Date().toLocaleString()} | Total: ${ordersToprint.length} orders</div>
+                    </div>
+                    
+                    <div class="no-print" style="text-align: center; margin-top: 30px;">
+                        <button onclick="window.print()" style="background: #4CAF50; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 14px;">
+                            🖨️ Print Report
+                        </button>
+                        <button onclick="window.close()" style="background: #f44336; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                            ❌ Close
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printHTML);
+            printWindow.document.close();
+        }
+
+        // Print filtered orders function
+        function printFilteredOrders() {
+            const ordersToprint = filteredOrders.length > 0 ? filteredOrders : orders;
+            
+            if (ordersToprint.length === 0) {
+                showNotification('❌ No orders to print! Apply filters first.', 'error', 3000);
+                return;
+            }
+            
+            // Get current filter values for report header
+            const searchTerm = document.getElementById('search-orders')?.value || '';
+            const statusFilter = document.getElementById('filter-status')?.value || '';
+            
+            let reportTitle = 'Orders Report';
+            let reportDescription = 'Current filtered orders list';
+            
+            if (searchTerm || statusFilter) {
+                reportDescription = 'Filters Applied: ';
+                if (searchTerm) reportDescription += `Search: "${searchTerm}" `;
+                if (statusFilter) reportDescription += `Status: ${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} `;
+                reportDescription += `| Showing: ${ordersToprint.length} of ${orders.length} total orders`;
+            } else {
+                reportDescription = `All orders | Total: ${ordersToprint.length} orders`;
+            }
+            
+            generateOrdersReport(ordersToprint, reportTitle, reportDescription);
+            showNotification(`🖨️ Orders report generated! ${ordersToprint.length} orders ready to print.`, 'success', 4000);
+        }
+
+        // Calculate order statistics
+        function calculateOrderStats(ordersArray = orders) {
+            const stats = {
+                total: ordersArray.length,
+                processing: 0,
+                ready: 0,
+                dispatched: 0,
+                delivered: 0,
+                cancelled: 0,
+                revenue: 0
+            };
+
+            ordersArray.forEach(order => {
+                stats[order.status]++;
+                if (order.status !== 'cancelled') {
+                    stats.revenue += order.totalAmount;
+                }
+            });
+
+            return stats;
+        }
+        
         // Update orders grid
         function updateOrdersGrid(containerId, ordersToShow, currentPage = '') {
             const container = document.getElementById(containerId);
