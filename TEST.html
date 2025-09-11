@@ -3409,16 +3409,42 @@ function readCustomersFromSheet(sheet) {
         }
 
         function clearAllData() {
-            if (confirm('⚠️ Are you sure you want to clear all data? This action cannot be undone!')) {
-                orders = [];
-                customerDatabase = {};
-                localStorage.clear();
-                
-                updateAllDashboards();
-                updateSystemInfo();
-                
-                showNotification('🗑️ All data cleared successfully!', 'success', 3000);
+            const confirmClear = confirm('⚠️ Are you sure you want to clear ALL data?\n\nThis will delete:\n• All orders\n• All customer data\n• All settings\n\n❌ This action cannot be undone!');
+            
+            if (!confirmClear) return;
+            
+            const doubleConfirm = confirm('🚨 FINAL WARNING!\n\nThis will permanently delete everything!\n\nType "DELETE" in the next prompt to confirm.');
+            
+            if (!doubleConfirm) return;
+            
+            const typeConfirm = prompt('Type "DELETE" to confirm permanent deletion:');
+            
+            if (typeConfirm !== 'DELETE') {
+                showNotification('❌ Data deletion cancelled - incorrect confirmation', 'info', 3000);
+                return;
             }
+            
+            // Clear all data
+            orders = [];
+            customerDatabase = {};
+            appSettings = {
+                businessName: 'My Business',
+                businessPhone: '+91 9876543210',
+                businessEmail: 'contact@mybusiness.com',
+                businessAddress: '123 Business Street, City, State - 123456'
+            };
+            
+            // Clear localStorage
+            localStorage.removeItem('orders');
+            localStorage.removeItem('customerDatabase');
+            localStorage.removeItem('appSettings');
+            
+            // Update displays
+            updateAllDashboards();
+            updateSystemInfo();
+            updateSettingsForm();
+            
+            showNotification('🗑️ All data cleared successfully! System reset to default state.', 'success', 4000);
         }
 
         // Get time ago helper function
@@ -3792,32 +3818,11 @@ function readCustomersFromSheet(sheet) {
             `).join('');
         }
 
-        // Manual QR Input (for testing without camera)
-        function simulateQRScan() {
-            const testOrderId = prompt('🧪 Test QR Scanner\n\nEnter Order ID to simulate QR scan:');
-            
-            if (testOrderId) {
-                const qrData = `ORDER:${testOrderId}|CUSTOMER:Test Customer|MOBILE:9876543210|PRODUCT:Test Product|QTY:1|AMT:1000`;
-                processQRCode(qrData);
-            }
+        function addTestQRButton() {
+            // Test QR button functionality removed as requested
+            return;
         }
 
-        // Add test button for QR scanning (for development)
-        function addTestQRButton() {
-            const scannerSection = document.getElementById('qr-scanner-section');
-            if (scannerSection && !document.getElementById('test-qr-btn')) {
-                const testBtn = document.createElement('button');
-                testBtn.id = 'test-qr-btn';
-                testBtn.className = 'bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm';
-                testBtn.innerHTML = '<i class="fas fa-flask mr-2"></i>🧪 Test QR Scan';
-                testBtn.onclick = simulateQRScan;
-                
-                const buttonContainer = scannerSection.querySelector('.flex.justify-center.space-x-2');
-                if (buttonContainer) {
-                    buttonContainer.appendChild(testBtn);
-                }
-            }
-        }
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97d5590c15c95523',t:'MTc1NzU3NDY1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
